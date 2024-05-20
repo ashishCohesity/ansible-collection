@@ -317,6 +317,7 @@ def download_agent(module, path):
             if module.params.get("native_package"):
                 if module.params.get("operating_system") in (
                     "CentOS",
+                    "Rocky",
                     "RedHat",
                     "OracleLinux",
                 ):
