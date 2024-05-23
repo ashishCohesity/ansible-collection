@@ -1,6 +1,0 @@
----
-- name: ping module demo
-  hosts: linux
-  tasks:
-    - name: test connection
-      ping:
