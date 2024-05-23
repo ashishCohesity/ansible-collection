@@ -1,0 +1,8 @@
+[linux]
+10.14.8.253 ansible_user=cohesity ansible_password=Fr8shst8rt! ansible_become=true ansible_become_method=sudo ansible_become_password=Fr8shst8rt!
+
+[linux:vars]
+cohesity_server=10.14.49.14
+cohesity_username=admin
+cohesity_password=fr8shst8rt
+cohesity_validate_certs=false

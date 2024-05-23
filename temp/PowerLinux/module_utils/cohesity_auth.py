@@ -75,7 +75,6 @@ class Authentication(object):
 
         # => Without a valid token, we will need to make a call to request the accessToken.
         if not valid_token:
-            print(server)
             uri = "https://" + server + "/irisservices/api/v1/public/accessTokens"
             headers = {"Accept": "application/json"}
             payload = {"username": self.username, "password": self.password}

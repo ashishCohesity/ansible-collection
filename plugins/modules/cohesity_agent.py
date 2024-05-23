@@ -378,6 +378,16 @@ def download_agent(module, path):
         raise__cohesity_exception__handler(error, module)
     return filename
 
+            )
+        else:
+            raise__cohesity_exception__handler(e, module)
+    except urllib_error.URLError as e:
+        # => Capture and report any error messages.
+        raise__cohesity_exception__handler(e.read(), module)
+    except Exception as error:
+        raise__cohesity_exception__handler(error, module)
+    return filename
+
 
 def installation_failures(module, stdout, rc, message):
     # => The way that this installer works, we will not get back messages in stderr

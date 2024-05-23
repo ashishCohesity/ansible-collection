@@ -1,0 +1,10 @@
+{
+    "ansible_host": "10.14.72.122",
+    "cohesity_server": "10.14.49.14",
+    "cohesity_username": "admin",
+    "cohesity_password": "fr8shst8rt",
+    "hosts": "all",
+    "cohesity_validate_certs": false,
+    "ansible_user": "cohesity",
+    "service_user": "root"
+  }
