@@ -1,7 +1,9 @@
 import os
 import json
 from ansible.module_utils.urls import open_url, urllib_error
-
+from urllib import request as urllib_request
+from urllib import error as urllib_error
+import requests
 class InstallError(Exception):
     pass
 
@@ -10,13 +12,13 @@ def raise__cohesity_exception__handler(error, module):
 
 # Configuration parameters
 params = {
-    "cluster": "10.14.49.14",
+    "cluster": "10.14.55.222",
     "username": "admin",
     "password": "fr8shst8rt",  # Replace with actual password
     "validate_certs": False,
-    "native_package": False,
-    "operating_system": "Ubuntu",
-    "download_location": "/home/cohesity/ansible-collection/plugins/module_utils",  # Adjust this path as needed
+    "native_package": True,
+    "operating_system": "RedHat",
+    "download_location": "/home/cohesity/work",  # Adjust this path as needed
     "download_uri": ""
 }
 
@@ -47,19 +49,24 @@ def get_authentication_token(params):
     except IOError as error:
         raise InstallError(f"IO Error: {error}")
 
-# Main code to download the agent
 try:
     server = params.get("cluster")
     path = params.get("download_location")
+    if not os.path.exists(path):
+        os.makedirs(path)
+        print('Path created!')
     token = get_authentication_token(params)
-    # print(token)
     package_type = "kScript"
+
     if params.get("native_package"):
-        if params.get("operating_system") in ("CentOS", "Rocky", "RedHat", "OracleLinux"):
+        os_type = params.get("operating_system")
+        if os_type in ("CentOS", "Rocky", "OracleLinux"):
             package_type = "kRPM"
-        elif params.get("operating_system") == "SLES":
+        elif os_type == "SLES":
             package_type = "kSuseRPM"
-        elif params.get("operating_system") == "Ubuntu":
+        elif os_type == "RedHat":
+            package_type = "kPowerPCRPM"
+        elif os_type == "Ubuntu":
             package_type = "kDEB"
 
     if params.get("download_uri"):
@@ -70,42 +77,43 @@ try:
         }
     else:
         uri = (
-            "https://" + server +
-            "/irisservices/api/v1/public/physicalAgents/download?hostType=kLinux&pkgType=" + package_type
+            f"https://{server}/irisservices/api/v1/public/physicalAgents/download"
+            f"?hostType=kLinux&pkgType={package_type}"
         )
         headers = {
             "Accept": "application/octet-stream",
-            "Authorization": "Bearer " + token,
+            "Authorization": f"Bearer {token}",
             "user-agent": "cohesity-ansible/v1.2.0",
         }
-    # print(headers)
-    agent = open_url(
-            url=uri, headers=headers, validate_certs=False, timeout=REQUEST_TIMEOUT
-        )
-    resp_headers = agent.headers
-    # print(resp_headers)
-    if "content-disposition" in resp_headers.keys():
-        filename = resp_headers["content-disposition"].split("=")[1]
-    else:
-        filename = "cohesity-agent-installer"
-    
-    filename = path + "/" + filename
-    try:
-        with open(filename, "wb") as f:
+
+    print(f"Requesting URI: {uri}")
+    req = urllib_request.Request(uri, headers=headers)
+    with urllib_request.urlopen(req, timeout=REQUEST_TIMEOUT) as agent:
+        resp_headers = agent.headers
+        if "content-disposition" in resp_headers:
+            filename = resp_headers["content-disposition"].split("=")[1].strip('"')
+        else:
+            filename = "cohesity-agent-installer"
+        
+        filepath = os.path.join(path, filename)
+        print(f"Saving agent to: {filepath}")
+        with open(filepath, "wb") as f:
             f.write(agent.read())
-        os.chmod(filename, 0o755)
-    except Exception as e:
-        raise InstallError(e)
-    finally:
-        f.close()
-    
+        os.chmod(filepath, 0o755)
+
 except urllib_error.HTTPError as e:
-    error_msg = json.loads(e.read())
-    if "message" in error_msg:
-        print(f"HTTP Error: {error_msg['message']}")
-    else:
-        raise__cohesity_exception__handler(e, params)
+    try:
+        error_msg = json.loads(e.read().decode())
+        if "message" in error_msg:
+            print(f"HTTP Error: {error_msg['message']}")
+        else:
+            raise__cohesity_exception__handler(e, params)
+    except json.JSONDecodeError:
+        print(f"HTTP Error: {e.reason}")
+
 except urllib_error.URLError as e:
-    raise__cohesity_exception__handler(e.read(), params)
+    raise__cohesity_exception__handler(e, params)
+
 except Exception as error:
     raise__cohesity_exception__handler(error, params)
+

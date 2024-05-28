@@ -219,6 +219,7 @@ def check_agent(module, results):
     # => Determine if the Cohesity Agent is currently installed
     aix_agent_path = "/usr/local/cohesity/agent/aix_agent.sh"
     def_agent_path = "/etc/init.d/cohesity-agent"
+    power_agent_path = "/opt/cohesity/java_agent/config/cohesity-java-agent"
 
     # Look for default ansible agent path and aix agent path.
     agent_path = (
@@ -226,6 +227,8 @@ def check_agent(module, results):
         if os.path.exists(def_agent_path)
         else aix_agent_path
         if os.path.exists(aix_agent_path)
+        else power_agent_path
+        if os.path.exists(power_agent_path)
         else None
     )
     if agent_path:
@@ -317,11 +320,12 @@ def download_agent(module, path):
             if module.params.get("native_package"):
                 if module.params.get("operating_system") in (
                     "CentOS",
-                    "Rocky",
-                    "RedHat",
                     "OracleLinux",
+                    "Rocky"
                 ):
                     package_type = "kRPM"
+                elif module.params.get("operating_system") == "RedHat":
+                    package_type = "kPowerPCRPM"
                 elif module.params.get("operating_system") == "SLES":
                     package_type = "kSuseRPM"
                 elif module.params.get("operating_system") == "Ubuntu":
@@ -378,16 +382,6 @@ def download_agent(module, path):
         raise__cohesity_exception__handler(error, module)
     return filename
 
-            )
-        else:
-            raise__cohesity_exception__handler(e, module)
-    except urllib_error.URLError as e:
-        # => Capture and report any error messages.
-        raise__cohesity_exception__handler(e.read(), module)
-    except Exception as error:
-        raise__cohesity_exception__handler(error, module)
-    return filename
-
 
 def installation_failures(module, stdout, rc, message):
     # => The way that this installer works, we will not get back messages in stderr
@@ -425,6 +419,21 @@ def install_agent(module, installer, native):
     #
     # => Note: Python 2.6 doesn't fully support the new string formatters, so this
     # => try..except will give us a clean backwards compatibility.
+
+    # Create the user if create_user is true
+    if module.params.get("create_user"):
+        service_user = module.params.get("service_user", "cohesityagent")  # Default to 'cohesityagent' if not specified
+        service_group = module.params.get("service_group", service_user)  # Default to user name if group not specified
+        
+        # Create the user and group if they do not exist
+        module.run_command(f"getent group {service_group} || sudo groupadd {service_group}")
+        module.run_command(f"sudo adduser {service_user}")
+        module.run_command(f"id -u {service_user} || sudo useradd -m -g {service_group} {service_user}")
+        
+        # Configure sudoers for the new user
+        sudoers_entry = f"{service_user} ALL=(ALL) NOPASSWD:ALL\nDefaults:{service_user} !requiretty"
+        module.run_command(f'echo "{sudoers_entry}" | sudo tee /etc/sudoers.d/{service_user} > /dev/null')
+        module.run_command(f"sudo chmod 0440 /etc/sudoers.d/{service_user}")
     if not native:
         install_opts = (
             "--create-user " + str(int(module.params.get("create_user"))) + " "
@@ -451,6 +460,7 @@ def install_agent(module, installer, native):
                 "CentOS",
                 "RedHat",
                 "OracleLinux",
+                "Rocky"
             ):
                 cmd = "sudo COHESITYUSER={0} rpm -i {1}".format(user, installer)
             elif module.params.get("operating_system") == "AIX":
@@ -472,6 +482,7 @@ def install_agent(module, installer, native):
                 "CentOS",
                 "RedHat",
                 "OracleLinux",
+                "Rocky"
             ):
                 cmd = "sudo COHESITYUSER=%s  rpm -i %s" % (user, installer)
 
@@ -479,7 +490,7 @@ def install_agent(module, installer, native):
     # => Any return code other than 0 is considered a failure.
     if rc:
         installation_failures(
-            module, stdout, rc, "Cohesity Agent is partially installed"
+            module, stdout, rc, "Cohesity Agent is partially installed 1"
         )
     return (True, "Successfully Installed the Cohesity agent")
 
@@ -502,7 +513,7 @@ def extract_agent(module, filename):
     # => Any return code other than 0 is considered a failure.
     if rc:
         installation_failures(
-            module, stdout, rc, "Cohesity Agent is partially installed"
+            module, stdout, rc, "Cohesity Agent is partially installed 2"
         )
     return (True, "Successfully Installed the Cohesity agent", target)
 
@@ -524,7 +535,7 @@ def remove_agent(module, installer, native):
         # => Any return code other than 0 is considered a failure.
         if rc:
             installation_failures(
-                module, out, rc, "Cohesity Agent is partially installed"
+                module, out, rc, "Cohesity Agent is partially installed 3"
             )
     else:
         if module.params.get("operating_system") == "AIX":
@@ -846,7 +857,7 @@ def main():
                     results = check_agent(module, results)
             elif results["version"] == "unknown":
                 # => There is a problem that we should invesitgate.
-                module.fail_json(msg="Cohesity Agent is partially installed", **results)
+                module.fail_json(msg="Cohesity Agent is partially installed 4", **results)
             else:
                 # => If we received a valid version then the assumption will be
                 # => that the Agent is installed.  We should simply pass it foward
