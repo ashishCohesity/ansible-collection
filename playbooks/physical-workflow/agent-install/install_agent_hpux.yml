@@ -3,18 +3,17 @@
 # => Collection: cohesity.dataprotect
 # =>
 
-# => Install the Cohesity Agent on each Sles host
+# => Install the Cohesity Agent on each HPUX host
 # => specified in the Ansible inventory
 # =>
 ---
-- hosts: sles
+- hosts: HPUX
   vars:
     create_user: false
     dest_path: "/root/"
     json_file_name: "agent_installer_files.json"
-    json_file_path: "{{ server_path }}/{{ json_file_name }}"
+    json_file_path: "{{ cluster_path }}{{ json_file_name }}"
     data: "{{ lookup('file', json_file_path) | from_json }}"
-    solaris_arch: "{{ 'x86' if 'X86' in ansible_distribution_release else 'Sparc' }}"
 
   # => We need to gather facts to determine the OS type of
   # => the machine
@@ -24,20 +23,17 @@
 
   collections:
     - cohesity.dataprotect
+
   tasks:
-    - name: Find Solaris agent installer path
+    - name: Find HPUX agent installer path
       set_fact:
-        installer_src: "{{ server_path }}/{{ item.file.Filename }}"
+        installer_src: "{{ cluster_path }}{{ item.file.Filename }}"
         installer_dest: "{{ dest_path }}{{ item.file.Filename }}"
       loop: "{{ data }}"
       when:
-        - item.file.Hostenv == "Solaris"
-        - >
-          (
-            ("kSolaris" ~ ansible_distribution_major_version ~ solaris_arch) == item.file.SolarisPkgType
-          )
+        - item.file.Hostenv == "HPUX"
 
-    - name: Copy Solaris agent installer
+    - name: Copy HPUX agent installer
       ansible.builtin.copy:
         src: "{{ installer_src }}"
         dest: "{{ installer_dest }}"
@@ -52,34 +48,32 @@
         state: "{{ state | default('present') }}"
         create_user: "{{ create_user | default(false) }}"
         native_package: "{{ native_package | default(false) }}"
-        operating_system: "{{ ansible_distribution_release }}"
-        use_local_installer: "{{ use_local_installer | default(true) }}"
+        operating_system: "{{ ansible_distribution }}"
         installer_path: "{{ installer_dest }}"
       when: installer_src is defined and installer_dest is defined
 
     # # Alert: Don't edit these tasks.
-    # - name: Install Prerequisite Packages for SLES
+    # - name: Install Prerequisite Packages for HPUX
     #   action: >
     #     {{ ansible_pkg_mgr }} name="wget,rsync,lsof,lvm2,libcap-progs" state=present
     #   when:
-    #     - ansible_distribution == "Solaris"
+    #     - ansible_distribution == "HP-UX"
     #   tags: always
 
-    # - name: Check if firewall is enabled on SLES
+    # - name: Check if firewall is enabled on HPUX
     #   command: "firewall-cmd --state"
     #   ignore_errors: true
     #   register: firewall_status_centos
     #   when:
-    #     - ansible_distribution == "Solaris"
+    #     - ansible_distribution == "HP-UX"
     #   tags: always
 
-    # - name: Enable tcp port 50051 for SLES
+    # - name: Enable tcp port 50051 for HPUX
     #   command: "firewall-cmd {{ item }}"
     #   with_items:
     #     - --zone=public --permanent --add-port 50051/tcp
     #     - --reload
     #   when:
-    #     - ansible_distribution == "Solaris"
+    #     - ansible_distribution == "HP-UX"
     #     - firewall_status_centos.rc == 0
     #   tags: always
-

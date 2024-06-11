@@ -214,14 +214,15 @@ def verify_dependencies():
     # => wget, rsync, lsof, nfs-utils, lvm2
     pass
 
-
 def check_agent(module, results):
-    # => Determine if the Cohesity Agent is currently installed
+    # Define paths for various agent scripts
     aix_agent_path = "/usr/local/cohesity/agent/aix_agent.sh"
     def_agent_path = "/etc/init.d/cohesity-agent"
     power_agent_path = "/opt/cohesity/java_agent/config/cohesity-java-agent"
+    solaris_agent_path = "/usr/local/cohesity/agent/solaris_agent.sh"
+    hpux_agent_path = "/usr/local/cohesity/agent/hpux_agent.sh"
 
-    # Look for default ansible agent path and aix agent path.
+    # Determine which agent path exists
     agent_path = (
         def_agent_path
         if os.path.exists(def_agent_path)
@@ -229,8 +230,13 @@ def check_agent(module, results):
         if os.path.exists(aix_agent_path)
         else power_agent_path
         if os.path.exists(power_agent_path)
+        else solaris_agent_path
+        if os.path.exists(solaris_agent_path)
+        else hpux_agent_path
+        if os.path.exists(hpux_agent_path)
         else None
     )
+
     if agent_path:
         cmd = "%s version" % agent_path
         rc, out, err = module.run_command(cmd)
@@ -241,20 +247,48 @@ def check_agent(module, results):
                 version = v.split(" ")[-1]
                 break
         if version:
-            # => When the agent is installed, we should be able to return
-            # => the version information
             results["version"] = version
         else:
-            # => If this didn't return a Version, then we have bigger problems
-            # => and probably should try to re-install or force the uninstall.
-            results["version"] = "unknown"
+            cmd = "rpm -q cohesity-agent"
+            rc, out, err = module.run_command(cmd)
+            split_out = out.split("\n")
+            version = ""
+            for v in split_out:
+                if v.startswith("package cohesity-agent is not installed"):
+                    version = None
+                    break
+                if v.startswith("cohesity-java-agent"):
+                    version = v.split("-")[3]
+                    break
+                if v.startswith("cohesity-agent"):
+                    version = v.split("-")[2]
+                    break
+            if version == "":
+                results["version"] = "unknown"
+            else:
+                results["version"] = version
             results["check_agent"] = dict(stdout=out, stderr=err)
-
         return results
     elif os.path.exists("/etc/cohesity-agent"):
-        # => If the file is found then let's return an unknown state
-        # => immediately
-        results["version"] = "unknown"
+        cmd = "rpm -q cohesity-agent"
+        rc, out, err = module.run_command(cmd)
+        split_out = out.split("\n")
+        version = ""
+        for v in split_out:
+            if v.startswith("package cohesity-agent is not installed"):
+                version = None
+                break
+            if v.startswith("cohesity-java-agent"):
+                version = v.split("-")[3]
+                break
+            if v.startswith("cohesity-agent"):
+                version = v.split("-")[2]
+                break
+        if version == "":
+            results["version"] = "unknown"
+        else:
+            results["version"] = version
+        results["check_agent"] = dict(stdout=out, stderr=err)
         return results
     else:
         cmd = "ps -aux | grep crux/bin/linux_agent | grep -v python | awk '{print $2}'"
@@ -272,8 +306,6 @@ def check_agent(module, results):
                     if err:
                         pattern = "No such process"
                         if pattern in err:
-                            # => Since the kill command returned 'No such process' we
-                            # will just continue
                             pass
                         else:
                             results["changed"] = False
@@ -288,99 +320,9 @@ def check_agent(module, results):
                         pass
             results["version"] = False
             return results
-
         else:
-            # => If the files are not found then let's return False
-            # => immediately
             results["version"] = False
             return results
-
-
-def download_agent(module, path):
-    try:
-        if module.params.get("operating_system") == "AIX":
-            server = module.params.get("cluster")
-            token = get__cohesity_auth__token(module)
-            uri = (
-                "https://"
-                + server
-                + "/irisservices/api/v1/public/physicalAgents/download"
-                + "?hostType=kAix&agentType=kJava"
-            )
-            headers = {
-                "Accept": "application/octet-stream",
-                "Authorization": "Bearer " + token,
-                "user-agent": "cohesity-ansible/v1.2.0",
-            }
-        elif not module.params.get("download_uri"):
-            os_type = "Linux"
-            server = module.params.get("cluster")
-            token = get__cohesity_auth__token(module)
-            package_type = "kScript"
-            if module.params.get("native_package"):
-                if module.params.get("operating_system") in (
-                    "CentOS",
-                    "OracleLinux",
-                    "Rocky"
-                ):
-                    package_type = "kRPM"
-                elif module.params.get("operating_system") == "RedHat":
-                    package_type = "kPowerPCRPM"
-                elif module.params.get("operating_system") == "SLES":
-                    package_type = "kSuseRPM"
-                elif module.params.get("operating_system") == "Ubuntu":
-                    package_type = "kDEB"
-            uri = (
-                "https://"
-                + server
-                + "/irisservices/api/v1/public/physicalAgents/download?hostType=k"
-                + os_type
-                + "&pkgType="
-                + package_type
-            )
-            headers = {
-                "Accept": "application/octet-stream",
-                "Authorization": "Bearer " + token,
-                "user-agent": "cohesity-ansible/v1.2.0",
-            }
-        else:
-            uri = module.params.get("download_uri")
-            headers = {
-                "Accept": "application/octet-stream",
-                "user-agent": "cohesity-ansible/v1.2.0",
-            }
-
-        agent = open_url(
-            url=uri, headers=headers, validate_certs=False, timeout=REQUEST_TIMEOUT
-        )
-        resp_headers = agent.headers
-        if "content-disposition" in resp_headers.keys():
-            filename = resp_headers["content-disposition"].split("=")[1]
-        else:
-            filename = "cohesity-agent-installer"
-        filename = path + "/" + filename
-        try:
-            with open(filename, "wb") as f:
-                f.write(agent.read())
-            os.chmod(filename, 0o755)
-        except Exception as e:
-            raise InstallError(e)
-        finally:
-            f.close()
-    except urllib_error.HTTPError as e:
-        error_msg = json.loads(e.read())
-        if "message" in error_msg:
-            module.fail_json(
-                msg="Failed to download the Cohesity Agent", reason=error_msg["message"]
-            )
-        else:
-            raise__cohesity_exception__handler(e, module)
-    except urllib_error.URLError as e:
-        # => Capture and report any error messages.
-        raise__cohesity_exception__handler(e.read(), module)
-    except Exception as error:
-        raise__cohesity_exception__handler(error, module)
-    return filename
 
 
 def installation_failures(module, stdout, rc, message):
@@ -420,20 +362,38 @@ def install_agent(module, installer, native):
     # => Note: Python 2.6 doesn't fully support the new string formatters, so this
     # => try..except will give us a clean backwards compatibility.
 
+    # Check if sudo is available
+    sudo_available = module.run_command("which sudo")[0] == 0
+
     # Create the user if create_user is true
     if module.params.get("create_user"):
         service_user = module.params.get("service_user", "cohesityagent")  # Default to 'cohesityagent' if not specified
         service_group = module.params.get("service_group", service_user)  # Default to user name if group not specified
         
+        # Check if the user and group already exist
+        user_exists = module.run_command("lsuser {}".format(service_user))
+        group_exists = module.run_command("lsgroup {}".format(service_group))
+
         # Create the user and group if they do not exist
-        module.run_command(f"getent group {service_group} || sudo groupadd {service_group}")
-        module.run_command(f"sudo adduser {service_user}")
-        module.run_command(f"id -u {service_user} || sudo useradd -m -g {service_group} {service_user}")
-        
-        # Configure sudoers for the new user
-        sudoers_entry = f"{service_user} ALL=(ALL) NOPASSWD:ALL\nDefaults:{service_user} !requiretty"
-        module.run_command(f'echo "{sudoers_entry}" | sudo tee /etc/sudoers.d/{service_user} > /dev/null')
-        module.run_command(f"sudo chmod 0440 /etc/sudoers.d/{service_user}")
+        if user_exists != 0:
+            create_user_command = "mkuser {}".format(service_user)
+            if module.params.get("operating_system") == "AIX":
+                create_user_command = "mkuser {}".format(service_user)
+            module.run_command(create_user_command)
+        if group_exists != 0:
+            create_group_command = "mkgroup {}".format(service_group)
+            if module.params.get("operating_system") == "AIX":
+                create_group_command = "mkgroup {}".format(service_group)
+            module.run_command(create_group_command)
+
+
+        if sudo_available:
+            # Configure sudoers for the new user if sudo is available
+            sudoers_entry = "{} ALL=(ALL) NOPASSWD:ALL\nDefaults:{} !requiretty".format(service_user, service_user)
+            module.run_command('echo "{}" | sudo tee /etc/sudoers.d/{} > /dev/null'.format(sudoers_entry, service_user))
+            module.run_command("sudo chmod 0440 /etc/sudoers.d/{}".format(service_user))
+
+
     if not native:
         install_opts = (
             "--create-user " + str(int(module.params.get("create_user"))) + " "
@@ -464,9 +424,19 @@ def install_agent(module, installer, native):
             ):
                 cmd = "sudo COHESITYUSER={0} rpm -i {1}".format(user, installer)
             elif module.params.get("operating_system") == "AIX":
-                cmd = "sudo COHESITYUSER={0} installp -ad {1} all".format(
-                    user, installer
-                )
+                if sudo_available:
+                    cmd = "sudo COHESITYUSER={0} installp -ad {1} all".format(
+                        user, installer
+                    )
+                else:
+                    cmd = "su - root -c 'COHESITYUSER={0} installp -ad {1} all'".format(
+                        user, installer
+                    )
+            elif module.params.get("operating_system") == "HP-UX":
+                cmd = "swinstall -s {0} -x reinstall=true *".format(installer)
+            elif "Solaris" in module.params.get("operating_system") :
+              # Command for installing package on Solaris as root
+                cmd = "su - root -c '/usr/sbin/pkgadd -a /root/insadmin -d {0} < /root/allinp'".format(installer)
             else:
                 installation_failures(
                     module,
@@ -486,11 +456,12 @@ def install_agent(module, installer, native):
             ):
                 cmd = "sudo COHESITYUSER=%s  rpm -i %s" % (user, installer)
 
-    rc, stdout, stderr = module.run_command(cmd, cwd=installer)
+    rc, stdout, stderr = module.run_command(cmd)
+
     # => Any return code other than 0 is considered a failure.
     if rc:
         installation_failures(
-            module, stdout, rc, "Cohesity Agent is partially installed 1"
+            module, stdout, rc, "Cohesity Agent is partially installed 1 " + cmd
         )
     return (True, "Successfully Installed the Cohesity agent")
 
@@ -545,6 +516,13 @@ def remove_agent(module, installer, native):
                 installation_failures(
                     module, stdout, rc, "Failed to uninstall cohesity agent"
                 )
+        elif module.params.get("operating_system") == "HP-UX":
+            cmd = "swremove cohesity_agent"
+            rc, stdout, err = module.run_command(cmd)
+            if rc:
+                installation_failures(
+                    module, stdout, rc, "Failed to uninstall cohesity agent"
+                )
         elif module.params.get("operating_system") == "Ubuntu":
             cmd = "sudo dpkg -P cohesity-agent"
             rc, stdout, stderr = module.run_command(cmd)
@@ -572,6 +550,28 @@ def remove_agent(module, installer, native):
                     rc,
                     "The cohesity agent is uninstalled but failed to remove /etc/cohesity-agent",
                 )
+        elif "Solaris" in module.params.get("operating_system") :
+            # cmd = "su"
+            # rc, stdout, stderr = module.run_command(cmd)
+            # if rc:
+            #     installation_failures(
+            #         module,
+            #         stdout,
+            #         rc,
+
+            #         "Failed to become superuser",
+            #     )
+            cmd = "su - root -c 'yes | /usr/sbin/pkgrm -v -a insadmin cohesity-agent'"
+            # cmd = "printf " +'y\n'+ "  su - root -c '/usr/sbin/pkgrm -v -a \root\insadmin cohesity-agent'"
+            rc, stdout, stderr = module.run_command(cmd)
+            if rc:
+                installation_failures(
+                    module,
+                    stdout,
+                    rc,
+                    "Failed to uninstall cohesity agent ",
+                )
+
         else:
             installation_failures(
                 module,
@@ -761,38 +761,29 @@ def update_agent(module):
     except Exception as error:
         raise__cohesity_exception__handler(error, module)
 
-
 def main():
     # => Load the default arguments including those specific to the Cohesity Agent.
     argument_spec = cohesity_common_argument_spec()
     argument_spec.update(
         dict(
             state=dict(choices=["present", "absent"], default="present", type="str"),
-            download_location=dict(default=""),
+            download_location=dict(default="/"),
             service_user=dict(default="cohesityagent"),
             service_group=dict(default="cohesityagent"),
             create_user=dict(default=True, type="bool"),
             file_based=dict(default=False, type="bool"),
             native_package=dict(default=False, type="bool"),
-            download_uri=dict(default=""),
             operating_system=dict(default="", type="str"),
             host=dict(type="str", default=""),
             upgrade=dict(type="bool", default=False),
             wait_minutes=dict(type="int", default=30),
+            installer_path=dict(type="str", default=""),
         )
     )
 
     # => Create a new module object
     module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
     results = dict(changed=False, version=False, state=module.params.get("state"))
-
-    # => Make a temporary directory to house the downloaded installer.
-    if module.params.get("download_location"):
-        tempdir = module.params.get("download_location")
-        create_download_dir(module, tempdir)
-
-    else:
-        tempdir = mkdtemp(prefix="ansible.")
 
     # Agent installation for AIX operating system is done using native package.
     if module.params.get("operating_system") == "AIX":
@@ -839,25 +830,21 @@ def main():
 
             if not results["version"]:
                 if not module.params.get("native_package"):
-                    results["filename"] = download_agent(module, tempdir)
-                    (
-                        results["changed"],
-                        results["message"],
-                        results["installer"],
-                    ) = extract_agent(module, results["filename"])
+                    results["filename"] = module.params.get("installer_path")
+                    results["changed"], results["message"], results["installer"] = extract_agent(module, results["filename"])
                     results["changed"], results["message"] = install_agent(
                         module, results["installer"], False
                     )
                     results = check_agent(module, results)
                 else:
-                    results["filename"] = download_agent(module, tempdir)
+                    results["filename"] = module.params.get("installer_path")
                     results["changed"], results["message"] = install_agent(
                         module, results["filename"], True
                     )
                     results = check_agent(module, results)
             elif results["version"] == "unknown":
                 # => There is a problem that we should invesitgate.
-                module.fail_json(msg="Cohesity Agent is partially installed 4", **results)
+                module.fail_json(msg="Cohesity Agent is partially installed", **results)
             else:
                 # => If we received a valid version then the assumption will be
                 # => that the Agent is installed.  We should simply pass it foward
@@ -881,14 +868,8 @@ def main():
             if results["version"]:
                 if not module.params.get("native_package"):
                     results.pop("check_agent", None)
-                    # => When removing the agent, we will need to download the installer once again,
-                    # => and then run the --full-uninstall command.
-                    results["filename"] = download_agent(module, tempdir)
-                    (
-                        results["changed"],
-                        results["message"],
-                        results["installer"],
-                    ) = extract_agent(module, results["filename"])
+                    results["filename"] = module.params.get("installer_path")
+                    results["changed"], results["message"], results["installer"] = extract_agent(module, results["filename"])
                     results["changed"], results["message"] = remove_agent(
                         module, results["installer"], False
                     )
@@ -912,14 +893,7 @@ def main():
         msg = "Unexpected error caused while managing the Cohesity Linux Agent."
         raise__cohesity_exception__handler(error, module, msg)
 
-    finally:
-        # => We should delete the downloaded installer regardless of our success.  This could be debated
-        # => either way but seems like a better choice.
-        if module.params.get("download_location"):
-            if "installer" in results:
-                shutil.rmtree(results["installer"])
-        else:
-            shutil.rmtree(tempdir)
+    
 
     if success:
         # -> Return Ansible JSON

@@ -114,8 +114,33 @@ Function New-CohesityToken {
 }
 
 Function Get-CohesityAgent {
-    Get-ItemProperty -LiteralPath HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object { $_.DisplayName -like "Cohesity Agent *" }
+    # Get all subkeys under HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\
+    $uninstallKeys = Get-ChildItem -Path "HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall"
+
+    # Initialize an array to store properties of Cohesity Agent
+    $cohesityAgentProperties = @()
+
+    # Iterate through each subkey and check for Cohesity Agent
+    foreach ($key in $uninstallKeys) {
+        # Get the properties of the current subkey
+        $properties = Get-ItemProperty -Path $key.PSPath
+
+        # Check if the DisplayName matches the Cohesity Agent
+        if ($properties.DisplayName -like "Cohesity Agent*") {
+            # Add properties specific to Cohesity Agent to the array
+            $cohesityAgentProperties += @{
+                DisplayName = $properties.DisplayName
+                DisplayVersion = $properties.DisplayVersion
+                # Add more properties as needed
+            }
+        }
+    }
+
+    # Return the properties of Cohesity Agent
+    return $cohesityAgentProperties
 }
+
+
 
 Function Find-CohesityAgent {
     param(
@@ -251,21 +276,30 @@ Function Install-CohesityAgent {
             # => Remove the downloaded file and temporary directory.
             Remove-Item -LiteralPath $tmpdir -Confirm:$False -Force -Recurse
         }
-        $agent = Get-CohesityAgent
+        $agents = Get-CohesityAgent
 
-        if ($null -ne $agent.DisplayVersion) {
+        if ($agents.Count -gt 0) {
+            # Check if the DisplayVersion property exists and is not null for the first agent
+            if ($agents[0].DisplayVersion -ne $null) {
+                $results = @{
+                    changed = $true
+                    version = $agents[0].DisplayVersion
+                    msg = "Successfully Installed Cohesity Agent on Host"
+                }
+            } else {
+                $results = @{
+                    changed = $false
+                    msg = "Cohesity Agent is installed, but DisplayVersion is not available"
+                }
+            }
+        } else {
             $results = @{
-                changed = $True
-                version = $agent.DisplayVersion
-                msg = "Successfully Installed Cohesity Agent on Host"
+                changed = $false
+                msg = "Cohesity Agent is not installed"
             }
         }
-        else {
-            $results = @{
-                changed = $False
-                msg = "Failed to install Cohesity Agent"
-            }
-        }
+
+
         Exit-Json $results
     }
 }

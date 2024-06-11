@@ -8,9 +8,6 @@
 # =>
 ---
 - hosts: aix
-  vars:
-    create_user: false
-    native_package: false
 
   # => We need to gather facts to determine the OS type of
   # => the machine
@@ -18,14 +15,47 @@
   become: true
   collections:
     - cohesity.dataprotect
+  vars:
+    dest_path: "/root/"
+    json_file_name: "agent_installer_files.json"
+    json_file_path: "{{ cluster_path }}/{{ json_file_name }}"
+    data: "{{ lookup('file', json_file_path) | from_json }}"
+
   tasks:
-    # Alert: Don't edit these tasks.
-    - name: Install Prerequisite Packages for AIX
-      action: >
-        {{ ansible_pkg_mgr }} name="wget,rsync" state=present
+    - name: Find AIX agent installer path
+      set_fact:
+        installer_src: "{{ cluster_path }}{{ item.file.Filename }}"
+        installer_dest: "{{ dest_path }}{{ item.file.Filename }}"
+      loop: "{{ data }}"
       when:
         - ansible_distribution == "AIX"
-      tags: always
+        - item.file.AgentType == "kJava"
+        - item.file.Hostenv == "AIX"
+      register: aix_installer_paths
+      until: aix_installer_paths.results | selectattr('installer_src', 'defined') | list | length > 0
+
+    - name: Set installer paths for AIX
+      set_fact:
+        installer_src: "{{ aix_installer_paths.results | selectattr('installer_src', 'defined') | first | map(attribute='installer_src') | first }}"
+        installer_dest: "{{ aix_installer_paths.results | selectattr('installer_dest', 'defined') | first | map(attribute='installer_dest') | first }}"
+      when: aix_installer_paths.results | length > 0
+
+    - name: Copy AIX agent installer
+      ansible.builtin.copy:
+        src: "{{ installer_src }}"
+        dest: "{{ installer_dest }}"
+      when: installer_src is defined and installer_dest is defined
+
+    # Alert: Don't edit these tasks.
+    # - name: Install Prerequisite Packages for AIX
+    #   package:
+    #     name: "{{ item }}"
+    #     state: present
+    #   loop:
+    #     - wget
+    #     - rsync
+    #   when: ansible_distribution == "AIX"
+    #   tags: always
 
     - name: "Cohesity agent: Set Agent to state of {{ state | default('present') }}"
       cohesity_agent:
@@ -36,6 +66,6 @@
         state: "{{ state | default('present') }}"
         create_user: "{{ create_user | default(false) }}"
         native_package: "{{ native_package | default(false) }}"
-        # Please don't overwrite/edit the operating_system. Will be automatically
-        # fetched from server.
         operating_system: "{{ ansible_distribution }}"
+        installer_path: "{{ installer_dest }}"
+      when: installer_src is defined and installer_dest is defined

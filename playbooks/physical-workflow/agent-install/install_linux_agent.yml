@@ -98,3 +98,5 @@
         # Please don't overwrite/edit the operating_system. Will be automatically
         # fetched from server.
         operating_system: "{{ ansible_distribution }}"
+        use_local_installer: "{{ use_local_installer | default(true) }}"
+        installer_path: "{{ installer_path | default('') }}"
