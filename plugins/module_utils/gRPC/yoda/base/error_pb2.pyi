@@ -1,0 +1,120 @@
+from google.protobuf.internal import enum_type_wrapper as _enum_type_wrapper
+from google.protobuf import descriptor as _descriptor
+from google.protobuf import message as _message
+from typing import ClassVar as _ClassVar, Optional as _Optional, Union as _Union
+
+DESCRIPTOR: _descriptor.FileDescriptor
+
+class ErrorProto(_message.Message):
+    __slots__ = ("type", "error_msg")
+    class Type(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+        __slots__ = ()
+        kNoError: _ClassVar[ErrorProto.Type]
+        kTransportError: _ClassVar[ErrorProto.Type]
+        kTimeout: _ClassVar[ErrorProto.Type]
+        kRetry: _ClassVar[ErrorProto.Type]
+        kNotLeader: _ClassVar[ErrorProto.Type]
+        kInvalid: _ClassVar[ErrorProto.Type]
+        kPending: _ClassVar[ErrorProto.Type]
+        kParseError: _ClassVar[ErrorProto.Type]
+        kServiceUnavailable: _ClassVar[ErrorProto.Type]
+        kAccessDenied: _ClassVar[ErrorProto.Type]
+        kUnknownError: _ClassVar[ErrorProto.Type]
+        kCorrupt: _ClassVar[ErrorProto.Type]
+        kNotFound: _ClassVar[ErrorProto.Type]
+        kShardFailure: _ClassVar[ErrorProto.Type]
+        kMountFailure: _ClassVar[ErrorProto.Type]
+        kReadError: _ClassVar[ErrorProto.Type]
+        kIOError: _ClassVar[ErrorProto.Type]
+        kOperationNotPermittedError: _ClassVar[ErrorProto.Type]
+        kJVMError: _ClassVar[ErrorProto.Type]
+        kJNIError: _ClassVar[ErrorProto.Type]
+        kFsError: _ClassVar[ErrorProto.Type]
+        kCancelled: _ClassVar[ErrorProto.Type]
+        kDuplicate: _ClassVar[ErrorProto.Type]
+        kMissingBackup: _ClassVar[ErrorProto.Type]
+        kBaseSnapshotNotFound: _ClassVar[ErrorProto.Type]
+        kSnapshotExpired: _ClassVar[ErrorProto.Type]
+        kConsumerError: _ClassVar[ErrorProto.Type]
+        kNotIndexed: _ClassVar[ErrorProto.Type]
+        kBaseSnapshotExpired: _ClassVar[ErrorProto.Type]
+        kOutOfSpace: _ClassVar[ErrorProto.Type]
+        kNoCrackedFileIndex: _ClassVar[ErrorProto.Type]
+        kNoFsUuidFound: _ClassVar[ErrorProto.Type]
+        kSlaveProcessingNotRequired: _ClassVar[ErrorProto.Type]
+        kAbort: _ClassVar[ErrorProto.Type]
+        kStaleSessionId: _ClassVar[ErrorProto.Type]
+        kViewDeleted: _ClassVar[ErrorProto.Type]
+        kReadOnly: _ClassVar[ErrorProto.Type]
+        kAlreadyExists: _ClassVar[ErrorProto.Type]
+        kBusy: _ClassVar[ErrorProto.Type]
+        kParentPathNotFound: _ClassVar[ErrorProto.Type]
+        kSnapshotNotFound: _ClassVar[ErrorProto.Type]
+        kInvalidDocumentId: _ClassVar[ErrorProto.Type]
+        kMissingObject: _ClassVar[ErrorProto.Type]
+        kMissingTags: _ClassVar[ErrorProto.Type]
+        kLibrarianDisabled: _ClassVar[ErrorProto.Type]
+        kNonIndexableEntity: _ClassVar[ErrorProto.Type]
+        kTenantCloudConfigNotFound: _ClassVar[ErrorProto.Type]
+        kInternalServerError: _ClassVar[ErrorProto.Type]
+        kUnknownBridgeError: _ClassVar[ErrorProto.Type]
+        kSecurityNotInitialized: _ClassVar[ErrorProto.Type]
+        kAwsESError: _ClassVar[ErrorProto.Type]
+        kCorruptMFT: _ClassVar[ErrorProto.Type]
+    kNoError: ErrorProto.Type
+    kTransportError: ErrorProto.Type
+    kTimeout: ErrorProto.Type
+    kRetry: ErrorProto.Type
+    kNotLeader: ErrorProto.Type
+    kInvalid: ErrorProto.Type
+    kPending: ErrorProto.Type
+    kParseError: ErrorProto.Type
+    kServiceUnavailable: ErrorProto.Type
+    kAccessDenied: ErrorProto.Type
+    kUnknownError: ErrorProto.Type
+    kCorrupt: ErrorProto.Type
+    kNotFound: ErrorProto.Type
+    kShardFailure: ErrorProto.Type
+    kMountFailure: ErrorProto.Type
+    kReadError: ErrorProto.Type
+    kIOError: ErrorProto.Type
+    kOperationNotPermittedError: ErrorProto.Type
+    kJVMError: ErrorProto.Type
+    kJNIError: ErrorProto.Type
+    kFsError: ErrorProto.Type
+    kCancelled: ErrorProto.Type
+    kDuplicate: ErrorProto.Type
+    kMissingBackup: ErrorProto.Type
+    kBaseSnapshotNotFound: ErrorProto.Type
+    kSnapshotExpired: ErrorProto.Type
+    kConsumerError: ErrorProto.Type
+    kNotIndexed: ErrorProto.Type
+    kBaseSnapshotExpired: ErrorProto.Type
+    kOutOfSpace: ErrorProto.Type
+    kNoCrackedFileIndex: ErrorProto.Type
+    kNoFsUuidFound: ErrorProto.Type
+    kSlaveProcessingNotRequired: ErrorProto.Type
+    kAbort: ErrorProto.Type
+    kStaleSessionId: ErrorProto.Type
+    kViewDeleted: ErrorProto.Type
+    kReadOnly: ErrorProto.Type
+    kAlreadyExists: ErrorProto.Type
+    kBusy: ErrorProto.Type
+    kParentPathNotFound: ErrorProto.Type
+    kSnapshotNotFound: ErrorProto.Type
+    kInvalidDocumentId: ErrorProto.Type
+    kMissingObject: ErrorProto.Type
+    kMissingTags: ErrorProto.Type
+    kLibrarianDisabled: ErrorProto.Type
+    kNonIndexableEntity: ErrorProto.Type
+    kTenantCloudConfigNotFound: ErrorProto.Type
+    kInternalServerError: ErrorProto.Type
+    kUnknownBridgeError: ErrorProto.Type
+    kSecurityNotInitialized: ErrorProto.Type
+    kAwsESError: ErrorProto.Type
+    kCorruptMFT: ErrorProto.Type
+    TYPE_FIELD_NUMBER: _ClassVar[int]
+    ERROR_MSG_FIELD_NUMBER: _ClassVar[int]
+    type: ErrorProto.Type
+    error_msg: str
+    def __init__(self, type: _Optional[_Union[ErrorProto.Type, str]] = ..., error_msg: _Optional[str] = ...) -> None: ...

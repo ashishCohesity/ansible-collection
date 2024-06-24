@@ -1,0 +1,154 @@
+from google.protobuf.internal import enum_type_wrapper as _enum_type_wrapper
+from google.protobuf import descriptor as _descriptor
+from typing import ClassVar as _ClassVar
+
+DESCRIPTOR: _descriptor.FileDescriptor
+
+class NotAllowed(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    abstract: _ClassVar[NotAllowed]
+    and: _ClassVar[NotAllowed]
+    array: _ClassVar[NotAllowed]
+    as: _ClassVar[NotAllowed]
+    break: _ClassVar[NotAllowed]
+    callable: _ClassVar[NotAllowed]
+    case: _ClassVar[NotAllowed]
+    catch: _ClassVar[NotAllowed]
+    class: _ClassVar[NotAllowed]
+    clone: _ClassVar[NotAllowed]
+    const: _ClassVar[NotAllowed]
+    continue: _ClassVar[NotAllowed]
+    declare: _ClassVar[NotAllowed]
+    default: _ClassVar[NotAllowed]
+    die: _ClassVar[NotAllowed]
+    do: _ClassVar[NotAllowed]
+    echo: _ClassVar[NotAllowed]
+    else: _ClassVar[NotAllowed]
+    elseif: _ClassVar[NotAllowed]
+    empty: _ClassVar[NotAllowed]
+    enddeclare: _ClassVar[NotAllowed]
+    endfor: _ClassVar[NotAllowed]
+    endforeach: _ClassVar[NotAllowed]
+    endif: _ClassVar[NotAllowed]
+    endswitch: _ClassVar[NotAllowed]
+    endwhile: _ClassVar[NotAllowed]
+    eval: _ClassVar[NotAllowed]
+    exit: _ClassVar[NotAllowed]
+    extends: _ClassVar[NotAllowed]
+    final: _ClassVar[NotAllowed]
+    for: _ClassVar[NotAllowed]
+    foreach: _ClassVar[NotAllowed]
+    function: _ClassVar[NotAllowed]
+    global: _ClassVar[NotAllowed]
+    goto: _ClassVar[NotAllowed]
+    if: _ClassVar[NotAllowed]
+    implements: _ClassVar[NotAllowed]
+    include: _ClassVar[NotAllowed]
+    include_once: _ClassVar[NotAllowed]
+    instanceof: _ClassVar[NotAllowed]
+    insteadof: _ClassVar[NotAllowed]
+    interface: _ClassVar[NotAllowed]
+    isset: _ClassVar[NotAllowed]
+    list: _ClassVar[NotAllowed]
+    namespace: _ClassVar[NotAllowed]
+    new: _ClassVar[NotAllowed]
+    or: _ClassVar[NotAllowed]
+    print: _ClassVar[NotAllowed]
+    private: _ClassVar[NotAllowed]
+    protected: _ClassVar[NotAllowed]
+    public: _ClassVar[NotAllowed]
+    require: _ClassVar[NotAllowed]
+    require_once: _ClassVar[NotAllowed]
+    return: _ClassVar[NotAllowed]
+    static: _ClassVar[NotAllowed]
+    switch: _ClassVar[NotAllowed]
+    throw: _ClassVar[NotAllowed]
+    trait: _ClassVar[NotAllowed]
+    try: _ClassVar[NotAllowed]
+    unset: _ClassVar[NotAllowed]
+    use: _ClassVar[NotAllowed]
+    var: _ClassVar[NotAllowed]
+    while: _ClassVar[NotAllowed]
+    xor: _ClassVar[NotAllowed]
+    int: _ClassVar[NotAllowed]
+    float: _ClassVar[NotAllowed]
+    bool: _ClassVar[NotAllowed]
+    string: _ClassVar[NotAllowed]
+    true: _ClassVar[NotAllowed]
+    false: _ClassVar[NotAllowed]
+    null: _ClassVar[NotAllowed]
+    void: _ClassVar[NotAllowed]
+    iterable: _ClassVar[NotAllowed]
+abstract: NotAllowed
+and: NotAllowed
+array: NotAllowed
+as: NotAllowed
+break: NotAllowed
+callable: NotAllowed
+case: NotAllowed
+catch: NotAllowed
+class: NotAllowed
+clone: NotAllowed
+const: NotAllowed
+continue: NotAllowed
+declare: NotAllowed
+default: NotAllowed
+die: NotAllowed
+do: NotAllowed
+echo: NotAllowed
+else: NotAllowed
+elseif: NotAllowed
+empty: NotAllowed
+enddeclare: NotAllowed
+endfor: NotAllowed
+endforeach: NotAllowed
+endif: NotAllowed
+endswitch: NotAllowed
+endwhile: NotAllowed
+eval: NotAllowed
+exit: NotAllowed
+extends: NotAllowed
+final: NotAllowed
+for: NotAllowed
+foreach: NotAllowed
+function: NotAllowed
+global: NotAllowed
+goto: NotAllowed
+if: NotAllowed
+implements: NotAllowed
+include: NotAllowed
+include_once: NotAllowed
+instanceof: NotAllowed
+insteadof: NotAllowed
+interface: NotAllowed
+isset: NotAllowed
+list: NotAllowed
+namespace: NotAllowed
+new: NotAllowed
+or: NotAllowed
+print: NotAllowed
+private: NotAllowed
+protected: NotAllowed
+public: NotAllowed
+require: NotAllowed
+require_once: NotAllowed
+return: NotAllowed
+static: NotAllowed
+switch: NotAllowed
+throw: NotAllowed
+trait: NotAllowed
+try: NotAllowed
+unset: NotAllowed
+use: NotAllowed
+var: NotAllowed
+while: NotAllowed
+xor: NotAllowed
+int: NotAllowed
+float: NotAllowed
+bool: NotAllowed
+string: NotAllowed
+true: NotAllowed
+false: NotAllowed
+null: NotAllowed
+void: NotAllowed
+iterable: NotAllowed

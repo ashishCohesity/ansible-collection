@@ -22,6 +22,17 @@
     data: "{{ lookup('file', json_file_path) | from_json }}"
 
   tasks:
+    # Alert: Don't edit these tasks.
+    # - name: Install Prerequisite Packages for AIX
+    #   package:
+    #     name: "{{ item }}"
+    #     state: present
+    #   loop:
+    #     - wget
+    #     - rsync
+    #   when: ansible_distribution == "AIX"
+    #   tags: always
+
     - name: Find AIX agent installer path
       set_fact:
         installer_src: "{{ cluster_path }}{{ item.file.Filename }}"
@@ -46,16 +57,6 @@
         dest: "{{ installer_dest }}"
       when: installer_src is defined and installer_dest is defined
 
-    # Alert: Don't edit these tasks.
-    # - name: Install Prerequisite Packages for AIX
-    #   package:
-    #     name: "{{ item }}"
-    #     state: present
-    #   loop:
-    #     - wget
-    #     - rsync
-    #   when: ansible_distribution == "AIX"
-    #   tags: always
 
     - name: "Cohesity agent: Set Agent to state of {{ state | default('present') }}"
       cohesity_agent:

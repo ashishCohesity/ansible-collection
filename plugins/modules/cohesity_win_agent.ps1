@@ -127,10 +127,14 @@ Function Get-CohesityAgent {
 
         # Check if the DisplayName matches the Cohesity Agent
         if ($properties.DisplayName -like "Cohesity Agent*") {
+            # Clean up the UninstallString to remove leading double quote and trailing /log
+            $uninstallString = $properties.UninstallString -replace '^"', '' -replace ' /log$', '' -replace '\"','\'
+
             # Add properties specific to Cohesity Agent to the array
             $cohesityAgentProperties += @{
                 DisplayName = $properties.DisplayName
                 DisplayVersion = $properties.DisplayVersion
+                UninstallString = $uninstallString
                 # Add more properties as needed
             }
         }
@@ -139,6 +143,8 @@ Function Get-CohesityAgent {
     # Return the properties of Cohesity Agent
     return $cohesityAgentProperties
 }
+
+
 
 
 
@@ -272,15 +278,12 @@ Function Install-CohesityAgent {
             Fail-Json $errors $_.Exception.Message
 
         }
-        finally {
-            # => Remove the downloaded file and temporary directory.
-            Remove-Item -LiteralPath $tmpdir -Confirm:$False -Force -Recurse
-        }
+
         $agents = Get-CohesityAgent
 
         if ($agents.Count -gt 0) {
             # Check if the DisplayVersion property exists and is not null for the first agent
-            if ($agents[0].DisplayVersion -ne $null) {
+            if ($agents.DisplayVersion -ne $null) {
                 $results = @{
                     changed = $true
                     version = $agents[0].DisplayVersion
@@ -296,6 +299,7 @@ Function Install-CohesityAgent {
             $results = @{
                 changed = $false
                 msg = "Cohesity Agent is not installed"
+                agent= $agents
             }
         }
 
@@ -327,7 +331,7 @@ Function Remove-CohesityAgent {
                 step = "Failed while trying to uninstall Windows Agent"
                 command = $request
                 uri = $url
-                filename = $filename
+                filename = $Uninstaller
             }
             Fail-Json $errors $_.Exception.Message
 
@@ -375,7 +379,7 @@ $module.service_password = Get-AnsibleParam -obj $params -name "service_password
 $module.install_type = Get-AnsibleParam -obj $params -name "install_type" -type "str" -default "volcbt" -validateset "volcbt", "fscbt", "allcbt", "onlyagent"
 $module.preservesettings = Get-AnsibleParam -obj $params -name "preservesettings" -type "bool" -default $False
 $module.state = Get-AnsibleParam -obj $params -name "state" -type "str" -default "present" -validateset "present", "absent"
-
+$module.installer_path = Get-AnsibleParam -obj $params -name "installer_path" -type "str" -failifempty $true
 
 # => Check if the Agent is currently installed and handle State validation.
 # => If the State should be absent then return the uninstaller string.
@@ -413,11 +417,12 @@ if ( $module.check_mode ) {
 }
 else {
     $uninstaller = Find-CohesityAgent -State $module.state
+
 }
 switch ($module.state) {
     "present" {
         $results.args = $module
-        $results.filename = Invoke-AgentDownload -Self $module
+        $results.filename =  $module.installer_path
         Install-CohesityAgent -Self $results
     }
     "absent" {

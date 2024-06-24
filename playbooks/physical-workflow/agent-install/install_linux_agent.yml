@@ -71,22 +71,41 @@
       command: "firewall-cmd --state"
       ignore_errors: true
       register: firewall_status
-      when: 
+      when:
         - (ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "SLES") and state == "present" and {{ check_firewall_rules | default(false) }}
         - ansible_distribution == "Ubuntu" and state == "present" and {{ check_firewall_rules | default(false) }}
       tags: always
 
     - name: Enable tcp {{ port | default(50051) }}
       command: "firewall-cmd {{ firewall_command }} --add-{{ port | default(50051) }} {{ {{ port | default(50051) }} }}/tcp"
-      when: 
+      when:
         - (ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "SLES") and state == "present" and {{ check_firewall_rules | default(false) }} and firewall_status.rc == 0
         - ansible_distribution == "Ubuntu" and state == "present" and {{ check_firewall_rules | default(false) }} and firewall_status.rc == 0
       tags: always
 
-    - name: Debug native_package variable
-      debug:
-        msg: "native_package is set to: {{ native_package | default(false) }}"
-    - name: "Cohesity agent: Set Agent to state of {{ state | default('present') }}"
+    - name: Find Linux agent installer path
+      set_fact:
+        installer_src: "{{ server_path }}/{{ item.file.Filename }}"
+        installer_dest: "{{ dest_path }}{{ item.file.Filename }}"
+      loop: "{{ data }}"
+      when:
+        - item.file.Hostenv == "Linux"
+        - >
+          (
+            (item.file.LinuxPkgType == "kScript" and item.file.AgentType == "" and native_package == false) or
+            (item.file.LinuxPkgType == "kRPM" and ansible_distribution in ['CentOS', 'OracleLinux', 'Rocky'] and native_package == true) or
+            (item.file.LinuxPkgType == "kSuseRPM" and ansible_distribution == "SLES" and native_package == true) or
+            (item.file.LinuxPkgType == "kDEB" and ansible_distribution == "Ubuntu" and native_package == true) or
+            (item.file.LinuxPkgType == "kPowerPCRPM" and ansible_distribution == "RedHat" and native_package == true)
+          )
+
+    - name: Copy Linux agent installer
+      ansible.builtin.copy:
+        src: "{{ installer_src }}"
+        dest: "{{ installer_dest }}"
+      when: installer_src is defined and installer_dest is defined
+
+    - name: "Cohesity agent: Set Agent to state of present"
       cohesity_agent:
         cluster: "{{ cohesity_server }}"
         username: "{{ cohesity_username }}"
@@ -95,8 +114,6 @@
         state: "{{ state | default('present') }}"
         create_user: "{{ create_user | default(false) }}"
         native_package: "{{ native_package | default(false) }}"
-        # Please don't overwrite/edit the operating_system. Will be automatically
-        # fetched from server.
         operating_system: "{{ ansible_distribution }}"
-        use_local_installer: "{{ use_local_installer | default(true) }}"
-        installer_path: "{{ installer_path | default('') }}"
+        installer_path: "{{ installer_dest }}"
+      when: installer_src is defined and installer_dest is defined

@@ -1,0 +1,19 @@
+# playbooks/test_grpc_client.yml
+
+- name: Test grpc_client module
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Call GetAgentInfo RPC
+      cohesity.dataprotect.grpc_client:
+        rpc: "getAgentInfo"
+        key_path: "/home/cohesity/workspace/main/magneto/agents/keys/private/magneto_key.pem"
+        cacert_path: "/home/cohesity/workspace/main/magneto/agents/keys/certs/ca.cert.pem"
+        cert_path: "/home/cohesity/workspace/main/magneto/agents/keys/certs/magneto.pem"
+        server_address: "10.14.72.30:50051"
+        server_name_override: "Agent (gRPC server)"
+      register: result
+
+    - name: Display result
+      debug:
+        var: result.response

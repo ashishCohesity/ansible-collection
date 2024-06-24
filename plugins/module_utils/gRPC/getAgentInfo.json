@@ -1,0 +1,104 @@
+{
+    "agentInfo": {
+        "sourceEntityId": "0",
+        "apiVersion": "1",
+        "incarnationId": "2",
+        "state": "kHealthy",
+        "agentId": "68",
+        "dedupReadSupported": true,
+        "ipAddrStrVec": [
+            "10.14.72.30",
+            "10.14.74.141",
+            "172.17.0.1",
+            "172.21.0.1",
+            "172.26.0.1"
+        ],
+        "agentSwVersionStr": "master_release-20231128_3f4daec4",
+        "hostType": "kLinux",
+        "osVersion": "Linux 4.18.0-477.10.1.el8_8.x86_64 #1 SMP Tue May 16 11:38:37 UTC 2023",
+        "agentUid": {
+            "clusterId": "7278456247999781",
+            "clusterIncarnationId": "1709140562714",
+            "objectId": "6119"
+        },
+        "supportedFeatures": [
+            "oracle",
+            "oracle_uncatalog_with_tag",
+            "oracle_multi_node_multi_channel_support",
+            "oracle_encrypted_password_support",
+            "oracle_precheck_support",
+            "oracle_subnet_selection_supported",
+            "oracle_restore_use_shell_environment",
+            "oracle_restore_cancellation_supported",
+            "oracle_mnmc_can_use_connect_descriptor",
+            "oracle_instant_migration_supported",
+            "oracle_pdb_restore_supported",
+            "oracle_smart_clone",
+            "oracle_roll_forward_recovery",
+            "oracle_archive_log_restore",
+            "oracle_recovery_validation",
+            "oracle_restore_spfile_or_pfile",
+            "oracle_is_backup_self_sufficient",
+            "oracle_allow_pdb_datafiles_rename",
+            "oracle_same_config_instant_restore",
+            "oracle_allow_rac_ir",
+            "file_based_dedup",
+            "physical_files_vcs",
+            "source_network_throttling",
+            "sql",
+            "sql_encrypted_password_support",
+            "sql_native_backup_using_vdi",
+            "sql_can_query_for_differential_base_backupset_info",
+            "sql_backup_log_using_native_op",
+            "sql_can_filter_backupset_entries_by_type",
+            "run_host_settings_check",
+            "uda",
+            "uda_windows_multiple_mount",
+            "uda_dynamic_config",
+            "brick_based_dedup",
+            "selective_fci_node_registration",
+            "backup_agent_config",
+            "restore_acls_only",
+            "partial_fetch_volume",
+            "auto_upgrade_certificate",
+            "agent_dynamic_mount_point_discovery"
+        ],
+        "osName": "Rocky Linux release 8.8 (Green Obsidian)",
+        "linuxAgentPkgType": "kScript",
+        "hostname": "localhost.localdomain",
+        "registeredClusterVec": [
+            {
+                "clusterId": "727845624799978",
+                "clusterIncarnationId": "1709140562714",
+                "clusterName": "ansibleintegration"
+            }
+        ],
+        "allowMultipleCohesityClusters": "kDisallow",
+        "agentType": "kCpp",
+        "ipaddrToSubnetIdVec": [
+            {
+                "ipAddr": "10.14.72.30",
+                "subnetId": "10.14.64.0"
+            },
+            {
+                "ipAddr": "10.14.74.141",
+                "subnetId": "10.14.64.0"
+            },
+            {
+                "ipAddr": "172.17.0.1",
+                "subnetId": "172.17.0.0"
+            },
+            {
+                "ipAddr": "172.21.0.1",
+                "subnetId": "172.21.0.0"
+            },
+            {
+                "ipAddr": "172.26.0.1",
+                "subnetId": "172.26.0.0"
+            }
+        ],
+        "isPersistentAgent": true,
+        "taskId": "-1",
+        "hostCapability": "8"
+    }
+}

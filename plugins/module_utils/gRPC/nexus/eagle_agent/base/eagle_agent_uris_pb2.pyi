@@ -1,0 +1,87 @@
+from google.protobuf import descriptor as _descriptor
+from google.protobuf import message as _message
+from typing import ClassVar as _ClassVar, Optional as _Optional
+
+DESCRIPTOR: _descriptor.FileDescriptor
+
+class HeliosAgentUrisProto(_message.Message):
+    __slots__ = ("base_uri", "api_version", "support_bundle_uri", "master_info", "helios_conn_status", "audit_report", "send_magneto_data", "send_iris_data", "stats_metrics_data", "simulation_base_uri", "simulation_cluster_create_uri", "simulation_cluster_claim_uri", "simulation_alerts_generation_uri", "simulation_create_proxy_configuration_uri", "simulation_remove_proxy_configuration_uri", "bulletin_board", "app_download_status_uri", "unregister_cluster", "unregister_uri", "change_id_reset_uri", "simulation_get_cluster_data_uri", "snapshot_diff_uri", "refresh_bulletin_board", "helios_proxy_config", "healthcheck_data_uri", "rigel_maintenance_mode", "metrics_uri", "utility_apps", "rpaas_base", "pairing_key", "authenticate_aws_role_uri", "rigel_s3_endpoint", "helios_endpoint", "bring_up_rigel", "s3_credentials_uri", "kms_credentials_uri", "fortknox_base", "object_store_credentials_uri", "create_agent_certificate")
+    BASE_URI_FIELD_NUMBER: _ClassVar[int]
+    API_VERSION_FIELD_NUMBER: _ClassVar[int]
+    SUPPORT_BUNDLE_URI_FIELD_NUMBER: _ClassVar[int]
+    MASTER_INFO_FIELD_NUMBER: _ClassVar[int]
+    HELIOS_CONN_STATUS_FIELD_NUMBER: _ClassVar[int]
+    AUDIT_REPORT_FIELD_NUMBER: _ClassVar[int]
+    SEND_MAGNETO_DATA_FIELD_NUMBER: _ClassVar[int]
+    SEND_IRIS_DATA_FIELD_NUMBER: _ClassVar[int]
+    STATS_METRICS_DATA_FIELD_NUMBER: _ClassVar[int]
+    SIMULATION_BASE_URI_FIELD_NUMBER: _ClassVar[int]
+    SIMULATION_CLUSTER_CREATE_URI_FIELD_NUMBER: _ClassVar[int]
+    SIMULATION_CLUSTER_CLAIM_URI_FIELD_NUMBER: _ClassVar[int]
+    SIMULATION_ALERTS_GENERATION_URI_FIELD_NUMBER: _ClassVar[int]
+    SIMULATION_CREATE_PROXY_CONFIGURATION_URI_FIELD_NUMBER: _ClassVar[int]
+    SIMULATION_REMOVE_PROXY_CONFIGURATION_URI_FIELD_NUMBER: _ClassVar[int]
+    BULLETIN_BOARD_FIELD_NUMBER: _ClassVar[int]
+    APP_DOWNLOAD_STATUS_URI_FIELD_NUMBER: _ClassVar[int]
+    UNREGISTER_CLUSTER_FIELD_NUMBER: _ClassVar[int]
+    UNREGISTER_URI_FIELD_NUMBER: _ClassVar[int]
+    CHANGE_ID_RESET_URI_FIELD_NUMBER: _ClassVar[int]
+    SIMULATION_GET_CLUSTER_DATA_URI_FIELD_NUMBER: _ClassVar[int]
+    SNAPSHOT_DIFF_URI_FIELD_NUMBER: _ClassVar[int]
+    REFRESH_BULLETIN_BOARD_FIELD_NUMBER: _ClassVar[int]
+    HELIOS_PROXY_CONFIG_FIELD_NUMBER: _ClassVar[int]
+    HEALTHCHECK_DATA_URI_FIELD_NUMBER: _ClassVar[int]
+    RIGEL_MAINTENANCE_MODE_FIELD_NUMBER: _ClassVar[int]
+    METRICS_URI_FIELD_NUMBER: _ClassVar[int]
+    UTILITY_APPS_FIELD_NUMBER: _ClassVar[int]
+    RPAAS_BASE_FIELD_NUMBER: _ClassVar[int]
+    PAIRING_KEY_FIELD_NUMBER: _ClassVar[int]
+    AUTHENTICATE_AWS_ROLE_URI_FIELD_NUMBER: _ClassVar[int]
+    RIGEL_S3_ENDPOINT_FIELD_NUMBER: _ClassVar[int]
+    HELIOS_ENDPOINT_FIELD_NUMBER: _ClassVar[int]
+    BRING_UP_RIGEL_FIELD_NUMBER: _ClassVar[int]
+    S3_CREDENTIALS_URI_FIELD_NUMBER: _ClassVar[int]
+    KMS_CREDENTIALS_URI_FIELD_NUMBER: _ClassVar[int]
+    FORTKNOX_BASE_FIELD_NUMBER: _ClassVar[int]
+    OBJECT_STORE_CREDENTIALS_URI_FIELD_NUMBER: _ClassVar[int]
+    CREATE_AGENT_CERTIFICATE_FIELD_NUMBER: _ClassVar[int]
+    base_uri: str
+    api_version: str
+    support_bundle_uri: str
+    master_info: str
+    helios_conn_status: str
+    audit_report: str
+    send_magneto_data: str
+    send_iris_data: str
+    stats_metrics_data: str
+    simulation_base_uri: str
+    simulation_cluster_create_uri: str
+    simulation_cluster_claim_uri: str
+    simulation_alerts_generation_uri: str
+    simulation_create_proxy_configuration_uri: str
+    simulation_remove_proxy_configuration_uri: str
+    bulletin_board: str
+    app_download_status_uri: str
+    unregister_cluster: str
+    unregister_uri: str
+    change_id_reset_uri: str
+    simulation_get_cluster_data_uri: str
+    snapshot_diff_uri: str
+    refresh_bulletin_board: str
+    helios_proxy_config: str
+    healthcheck_data_uri: str
+    rigel_maintenance_mode: str
+    metrics_uri: str
+    utility_apps: str
+    rpaas_base: str
+    pairing_key: str
+    authenticate_aws_role_uri: str
+    rigel_s3_endpoint: str
+    helios_endpoint: str
+    bring_up_rigel: str
+    s3_credentials_uri: str
+    kms_credentials_uri: str
+    fortknox_base: str
+    object_store_credentials_uri: str
+    create_agent_certificate: str
+    def __init__(self, base_uri: _Optional[str] = ..., api_version: _Optional[str] = ..., support_bundle_uri: _Optional[str] = ..., master_info: _Optional[str] = ..., helios_conn_status: _Optional[str] = ..., audit_report: _Optional[str] = ..., send_magneto_data: _Optional[str] = ..., send_iris_data: _Optional[str] = ..., stats_metrics_data: _Optional[str] = ..., simulation_base_uri: _Optional[str] = ..., simulation_cluster_create_uri: _Optional[str] = ..., simulation_cluster_claim_uri: _Optional[str] = ..., simulation_alerts_generation_uri: _Optional[str] = ..., simulation_create_proxy_configuration_uri: _Optional[str] = ..., simulation_remove_proxy_configuration_uri: _Optional[str] = ..., bulletin_board: _Optional[str] = ..., app_download_status_uri: _Optional[str] = ..., unregister_cluster: _Optional[str] = ..., unregister_uri: _Optional[str] = ..., change_id_reset_uri: _Optional[str] = ..., simulation_get_cluster_data_uri: _Optional[str] = ..., snapshot_diff_uri: _Optional[str] = ..., refresh_bulletin_board: _Optional[str] = ..., helios_proxy_config: _Optional[str] = ..., healthcheck_data_uri: _Optional[str] = ..., rigel_maintenance_mode: _Optional[str] = ..., metrics_uri: _Optional[str] = ..., utility_apps: _Optional[str] = ..., rpaas_base: _Optional[str] = ..., pairing_key: _Optional[str] = ..., authenticate_aws_role_uri: _Optional[str] = ..., rigel_s3_endpoint: _Optional[str] = ..., helios_endpoint: _Optional[str] = ..., bring_up_rigel: _Optional[str] = ..., s3_credentials_uri: _Optional[str] = ..., kms_credentials_uri: _Optional[str] = ..., fortknox_base: _Optional[str] = ..., object_store_credentials_uri: _Optional[str] = ..., create_agent_certificate: _Optional[str] = ...) -> None: ...

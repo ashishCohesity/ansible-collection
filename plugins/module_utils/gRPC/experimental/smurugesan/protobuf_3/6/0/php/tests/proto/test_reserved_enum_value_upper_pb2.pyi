@@ -1,0 +1,154 @@
+from google.protobuf.internal import enum_type_wrapper as _enum_type_wrapper
+from google.protobuf import descriptor as _descriptor
+from typing import ClassVar as _ClassVar
+
+DESCRIPTOR: _descriptor.FileDescriptor
+
+class NotAllowed(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    ABSTRACT: _ClassVar[NotAllowed]
+    AND: _ClassVar[NotAllowed]
+    ARRAY: _ClassVar[NotAllowed]
+    AS: _ClassVar[NotAllowed]
+    BREAK: _ClassVar[NotAllowed]
+    CALLABLE: _ClassVar[NotAllowed]
+    CASE: _ClassVar[NotAllowed]
+    CATCH: _ClassVar[NotAllowed]
+    CLASS: _ClassVar[NotAllowed]
+    CLONE: _ClassVar[NotAllowed]
+    CONST: _ClassVar[NotAllowed]
+    CONTINUE: _ClassVar[NotAllowed]
+    DECLARE: _ClassVar[NotAllowed]
+    DEFAULT: _ClassVar[NotAllowed]
+    DIE: _ClassVar[NotAllowed]
+    DO: _ClassVar[NotAllowed]
+    ECHO: _ClassVar[NotAllowed]
+    ELSE: _ClassVar[NotAllowed]
+    ELSEIF: _ClassVar[NotAllowed]
+    EMPTY: _ClassVar[NotAllowed]
+    ENDDECLARE: _ClassVar[NotAllowed]
+    ENDFOR: _ClassVar[NotAllowed]
+    ENDFOREACH: _ClassVar[NotAllowed]
+    ENDIF: _ClassVar[NotAllowed]
+    ENDSWITCH: _ClassVar[NotAllowed]
+    ENDWHILE: _ClassVar[NotAllowed]
+    EVAL: _ClassVar[NotAllowed]
+    EXIT: _ClassVar[NotAllowed]
+    EXTENDS: _ClassVar[NotAllowed]
+    FINAL: _ClassVar[NotAllowed]
+    FOR: _ClassVar[NotAllowed]
+    FOREACH: _ClassVar[NotAllowed]
+    FUNCTION: _ClassVar[NotAllowed]
+    GLOBAL: _ClassVar[NotAllowed]
+    GOTO: _ClassVar[NotAllowed]
+    IF: _ClassVar[NotAllowed]
+    IMPLEMENTS: _ClassVar[NotAllowed]
+    INCLUDE: _ClassVar[NotAllowed]
+    INCLUDE_ONCE: _ClassVar[NotAllowed]
+    INSTANCEOF: _ClassVar[NotAllowed]
+    INSTEADOF: _ClassVar[NotAllowed]
+    INTERFACE: _ClassVar[NotAllowed]
+    ISSET: _ClassVar[NotAllowed]
+    LIST: _ClassVar[NotAllowed]
+    NAMESPACE: _ClassVar[NotAllowed]
+    NEW: _ClassVar[NotAllowed]
+    OR: _ClassVar[NotAllowed]
+    PRINT: _ClassVar[NotAllowed]
+    PRIVATE: _ClassVar[NotAllowed]
+    PROTECTED: _ClassVar[NotAllowed]
+    PUBLIC: _ClassVar[NotAllowed]
+    REQUIRE: _ClassVar[NotAllowed]
+    REQUIRE_ONCE: _ClassVar[NotAllowed]
+    RETURN: _ClassVar[NotAllowed]
+    STATIC: _ClassVar[NotAllowed]
+    SWITCH: _ClassVar[NotAllowed]
+    THROW: _ClassVar[NotAllowed]
+    TRAIT: _ClassVar[NotAllowed]
+    TRY: _ClassVar[NotAllowed]
+    UNSET: _ClassVar[NotAllowed]
+    USE: _ClassVar[NotAllowed]
+    VAR: _ClassVar[NotAllowed]
+    WHILE: _ClassVar[NotAllowed]
+    XOR: _ClassVar[NotAllowed]
+    INT: _ClassVar[NotAllowed]
+    FLOAT: _ClassVar[NotAllowed]
+    BOOL: _ClassVar[NotAllowed]
+    STRING: _ClassVar[NotAllowed]
+    TRUE: _ClassVar[NotAllowed]
+    FALSE: _ClassVar[NotAllowed]
+    NULL: _ClassVar[NotAllowed]
+    VOID: _ClassVar[NotAllowed]
+    ITERABLE: _ClassVar[NotAllowed]
+ABSTRACT: NotAllowed
+AND: NotAllowed
+ARRAY: NotAllowed
+AS: NotAllowed
+BREAK: NotAllowed
+CALLABLE: NotAllowed
+CASE: NotAllowed
+CATCH: NotAllowed
+CLASS: NotAllowed
+CLONE: NotAllowed
+CONST: NotAllowed
+CONTINUE: NotAllowed
+DECLARE: NotAllowed
+DEFAULT: NotAllowed
+DIE: NotAllowed
+DO: NotAllowed
+ECHO: NotAllowed
+ELSE: NotAllowed
+ELSEIF: NotAllowed
+EMPTY: NotAllowed
+ENDDECLARE: NotAllowed
+ENDFOR: NotAllowed
+ENDFOREACH: NotAllowed
+ENDIF: NotAllowed
+ENDSWITCH: NotAllowed
+ENDWHILE: NotAllowed
+EVAL: NotAllowed
+EXIT: NotAllowed
+EXTENDS: NotAllowed
+FINAL: NotAllowed
+FOR: NotAllowed
+FOREACH: NotAllowed
+FUNCTION: NotAllowed
+GLOBAL: NotAllowed
+GOTO: NotAllowed
+IF: NotAllowed
+IMPLEMENTS: NotAllowed
+INCLUDE: NotAllowed
+INCLUDE_ONCE: NotAllowed
+INSTANCEOF: NotAllowed
+INSTEADOF: NotAllowed
+INTERFACE: NotAllowed
+ISSET: NotAllowed
+LIST: NotAllowed
+NAMESPACE: NotAllowed
+NEW: NotAllowed
+OR: NotAllowed
+PRINT: NotAllowed
+PRIVATE: NotAllowed
+PROTECTED: NotAllowed
+PUBLIC: NotAllowed
+REQUIRE: NotAllowed
+REQUIRE_ONCE: NotAllowed
+RETURN: NotAllowed
+STATIC: NotAllowed
+SWITCH: NotAllowed
+THROW: NotAllowed
+TRAIT: NotAllowed
+TRY: NotAllowed
+UNSET: NotAllowed
+USE: NotAllowed
+VAR: NotAllowed
+WHILE: NotAllowed
+XOR: NotAllowed
+INT: NotAllowed
+FLOAT: NotAllowed
+BOOL: NotAllowed
+STRING: NotAllowed
+TRUE: NotAllowed
+FALSE: NotAllowed
+NULL: NotAllowed
+VOID: NotAllowed
+ITERABLE: NotAllowed

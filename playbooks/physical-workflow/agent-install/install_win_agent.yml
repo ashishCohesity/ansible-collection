@@ -8,34 +8,57 @@
 # =>
 ---
 - hosts: windows
-  gather_facts: true
-  become: false
-  collections:
-    - cohesity.dataprotect
   vars:
+    dest_path: C:\Users\Administrator\Downloads\
+    json_file_name: "agent_installer_files.json"
+    json_file_path: "{{ cluster_path }}{{ json_file_name }}"
+    data: "{{ lookup('file', json_file_path) | from_json }}"
     state: present
     reboot: true
+
+  gather_facts: true
+  become: false
+
+  collections:
+    - cohesity.dataprotect
+
   tasks:
-    - name: "Cohesity agent: Set Agent to state of {{ state | default('present') }}"
+    - name: Find Windows agent installer path
+      set_fact:
+        installer_src: "{{ cluster_path }}{{ item.file.Filename }}"
+        installer_dest: "{{ dest_path }}{{ item.file.Filename }}"
+      loop: "{{ data }}"
+      when:
+        - item.file.Hostenv == "Windows"
+
+    - name: Copy Windows agent installer
+      ansible.builtin.win_copy:
+        src: "{{ installer_src }}"
+        dest: "{{ installer_dest }}"
+      when: installer_src is defined and installer_dest is defined
+
+    - name: "Cohesity agent: Set Agent to state of present"
       cohesity_win_agent:
         cluster: "{{ cohesity_server }}"
         username: "{{ cohesity_username }}"
         password: "{{ cohesity_password }}"
         validate_certs: "{{ cohesity_validate_certs }}"
         state: "{{ state }}"
+        check_mode: True
         service_user: "{{ service_user | default('') }}"
         service_password: "{{ service_password | default('') }}"
         preserve_settings: "{{ preserve_settings | default(False) }}"
         install_type: "{{ install_type | default('volcbt') }}"
-      tags: always
+        installer_path: "{{ installer_dest }}"
+      when: installer_src is defined and installer_dest is defined
       register: installed
 
     - name: Firewall rule to allow CohesityAgent on TCP port 50051
       win_firewall_rule:
         name: Cohesity Agent Ansible
-        description:
-          - Automated Firewall rule created by the Cohesity Ansible integration to allow
-          - for the Cohesity Agent to communicate through the firewall.
+        description: |
+          Automated Firewall rule created by the Cohesity Ansible integration to allow
+          for the Cohesity Agent to communicate through the firewall.
         localport: 50051
         action: allow
         direction: in
@@ -44,10 +67,7 @@
         enabled: true
       tags: always
 
-    # => This reboot will only be triggered if both of the following conditions are true:
-    # => - The registered variable 'installed' returns true when the changed state is queried.
-    # => - The user defined variable 'cohesity_win_agent_reboot' returns as true.
-    - name: Reboot the Hosts after agent modification   # noqa 503
+    - name: Reboot the Hosts after agent modification
       win_reboot:
         reboot_timeout: 180
       when:

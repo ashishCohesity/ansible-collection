@@ -1,0 +1,8 @@
+---
+- name: Print all environment variables
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Print environment variables
+      debug:
+        var: environment

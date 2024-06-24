@@ -1,0 +1,27 @@
+---
+- name: Test my_dummy_module
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Set ANSIBLE_MODULE_UTILS environment variable
+      set_fact:
+        ansible_module_utils: "/home/cohesity/.ansible/plugins/module_utils:/usr/share/ansible/plugins/module_utils:/home/cohesity/.ansible/collections/ansible_collections/cohesity/dataprotect/plugins/module_utils:/home/cohesity/.ansible/collections/ansible_collections/cohesity/dataprotect/plugins/module_utils/gRPC"
+
+    - name: Say Hello using my_dummy_module
+      cohesity.dataprotect.my_dummy_module:
+        name: "Cohesity"
+      environment:
+        ANSIBLE_MODULE_UTILS: "{{ ansible_module_utils }}"
+      register: result
+
+    - name: Display result message
+      debug:
+        var: result.message
+
+    - name: Display environment variable length
+      debug:
+        var: result.Length
+
+    - name: Display environment variable paths
+      debug:
+        var: result.Paths
