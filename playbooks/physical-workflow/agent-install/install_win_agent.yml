@@ -9,20 +9,35 @@
 ---
 - hosts: windows
   vars:
-    dest_path: C:\Users\Administrator\Downloads\
+    dest_path: C:\Users\Administrator\Downloads\Cohesity_Agent_Ansible
+    cert_download_location: "/home/cohesity/work/win_cert.proto"
     json_file_name: "agent_installer_files.json"
     json_file_path: "{{ cluster_path }}{{ json_file_name }}"
     data: "{{ lookup('file', json_file_path) | from_json }}"
+    install_dependencies: true  # Set to true to install prerequisite packages
     state: present
-    reboot: true
+    reboot: false
 
-  gather_facts: true
+  # gather_facts: true
+  gather_facts: false
   become: false
 
   collections:
     - cohesity.dataprotect
 
   tasks:
+    - name: Get CohesityCA Agent Certificates
+      cohesity_certificates:
+        cluster: "{{ cohesity_server }}"
+        username: "{{ cohesity_username }}"
+        password: "{{ cohesity_password }}"
+        get_agent_certificates: true
+        download_location: "{{ cert_download_location }}"
+      when:
+        - state == "present"  # Only perform the action when state is 'present'
+      register: cohesity_result
+      delegate_to: localhost
+
     - name: Find Windows agent installer path
       set_fact:
         installer_src: "{{ cluster_path }}{{ item.file.Filename }}"
@@ -35,7 +50,21 @@
       ansible.builtin.win_copy:
         src: "{{ installer_src }}"
         dest: "{{ installer_dest }}"
-      when: installer_src is defined and installer_dest is defined
+      when:
+          - cohesity_result is defined
+          - installer_dest is defined
+          - state == "present"
+
+
+    - name: Copy CohesityCA Agent Certificates to the host
+      ansible.builtin.win_copy:
+        src: "{{ cert_download_location }}"
+        dest: "{{ dest_path }}cohesityca_agent_cert.proto"
+      when:
+        - cohesity_result is defined
+        - installer_dest is defined
+        - state == "present"
+
 
     - name: "Cohesity agent: Set Agent to state of present"
       cohesity_win_agent:
@@ -50,7 +79,11 @@
         preserve_settings: "{{ preserve_settings | default(False) }}"
         install_type: "{{ install_type | default('volcbt') }}"
         installer_path: "{{ installer_dest }}"
-      when: installer_src is defined and installer_dest is defined
+        cohesity_custom_cert_path: "{{ dest_path | default('/') }}cohesityca_agent_cert.proto"
+
+      when:
+        - (state == "present" and installer_src is defined and installer_dest is defined) or
+          (state == "absent")
       register: installed
 
     - name: Firewall rule to allow CohesityAgent on TCP port 50051
@@ -72,5 +105,7 @@
         reboot_timeout: 180
       when:
         - installed.changed
+        - (state == "present" and installer_src is defined and installer_dest is defined) or
+          (state == "absent")
         - "{{ reboot }}"
       tags: always

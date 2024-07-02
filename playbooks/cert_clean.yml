@@ -1,0 +1,60 @@
+---
+- name: Clean up Cohesity agent server certificates
+  hosts: all
+  gather_facts: true
+  vars:
+    agent_paths:
+      Linux: "/etc/init.d/cohesity-agent"
+      Rocky: "/etc/init.d/cohesity-agent"
+      RedHat: "/etc/init.d/cohesity-agent"
+      AIX: "/usr/local/cohesity/agent/aix_agent.sh"
+      PowerLinux: "/opt/cohesity/java_agent/config/cohesity-java-agent"
+      Solaris: "/usr/local/cohesity/agent/solaris_agent.sh"
+      HP-UX: "/usr/local/cohesity/agent/hpux_agent.sh"
+
+  tasks:
+
+    - name: Determine OS family
+      set_fact:
+        os_family: "{{ ansible_distribution }}"
+    - name: Stop Cohesity agent service
+      ansible.builtin.shell:
+        cmd: "{{ agent_paths[os_family] }} stop"
+      when: os_family in agent_paths.keys()
+      ignore_errors: true
+      tags:
+        - agent_cleanup
+
+
+    - name: Delete server_cert file
+      ansible.builtin.shell:
+        cmd: "rm -f {{ '/etc/cohesity-agent/server_cert' if os_family in ['Linux','Rocky','RedHat', 'AIX'] else '/opt/cohesity/java_agent/config/server_cert' }}"
+      when: os_family in agent_paths.keys()
+      ignore_errors: true
+      tags:
+        - agent_cleanup
+
+    - name: Start Cohesity agent service
+      ansible.builtin.shell:
+        cmd: "{{ agent_paths[os_family] }} start"
+      when: os_family in agent_paths.keys()
+      ignore_errors: true
+      tags:
+        - agent_cleanup
+
+    - name: Verify cleanup results locally
+      ansible.builtin.command: "openssl s_client -connect 10.14.72.29:50051"
+      delegate_to: localhost
+      ignore_errors: true
+      register: cert_check
+
+    - name: Debug output
+      ansible.builtin.debug:
+        var: cert_check
+      delegate_to: localhost
+
+
+
+    - name: Restart Cohesity agent service
+      ansible.builtin.shell: "{{ agent_paths[os_family] }} start"
+      when: os_family in agent_paths.keys()

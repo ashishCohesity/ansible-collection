@@ -1,0 +1,57 @@
+---
+- name: Installing Certificates and Configuring CohesityCA Certificates on the hosts
+  hosts: all
+  vars:
+    cluster: "10.14.55.222"
+    username: "admin"
+    password: "fr8shst8rt"
+    download_location: "/root/cohesity_certs/"
+    installer_path: "<Installer.exe>"  # Path to the installer for Windows agents
+
+  tasks:
+    - name: Get CohesityCA Agent Certificates
+      cohesity_certificates:
+        cluster: "{{ cluster }}"
+        username: "{{ username }}"
+        password: "{{ password }}"
+        get_agent_certificates: true
+        download_location: "{{ download_location }}"
+      register: cohesity_result
+
+    - debug:
+        var: cohesity_result
+
+    - name: Set ENFORCE_USE_CUSTOM_CERTS and AGENT_CERT_FILE for Windows C++ agents
+      win_shell: |
+        <Installer.exe> /type=onlyagent /verysilent /norestart /suppressmsgboxes /enforceusecustomcert=yes /customcertstype=cohesitycustomcerts /cohesitycustomcertpath={{ download_location }}/cohesity_ca_cert.proto
+      when: ansible_os_family == 'Windows'
+
+    - name: Set ENFORCE_USE_CUSTOM_CERTS and AGENT_CERT_FILE for Linux C++ agents
+      shell: |
+        export ENFORCE_USE_CUSTOM_CERTS=true
+        export AGENT_CERT_FILE={{ download_location }}/cohesity_ca_cert.proto
+      when:  ansible_distribution in ['Rocky', 'CentOS', 'RedHat','OracleLinux']
+
+    - name: Set ENFORCE_USE_CUSTOM_CERTS and AGENT_CERT_FILE for Linux C++ agents (Debian/Ubuntu)
+      shell: |
+        echo 'export ENFORCE_USE_CUSTOM_CERTS=true' >> /usr/local/cohesity/set_env.sh
+        echo 'export AGENT_CERT_FILE={{ download_location }}/cohesity_ca_cert.proto' >> /usr/local/cohesity/set_env.sh
+      when: ansible_distribution in ['Ubuntu', 'Debian']
+
+    - name: Set ENFORCE_USE_CUSTOM_CERTS and AGENT_CERT_FILE for Linux PPC Java Agent
+      shell: |
+        export ENFORCE_USE_CUSTOM_CERTS=true
+        export AGENT_CERT_FILE={{ download_location }}/cohesity_ca_cert.proto
+      when: ansible_system == 'Linux' and ansible_architecture == 'ppc64'
+
+    - name: Set ENFORCE_USE_CUSTOM_CERTS and AGENT_CERT_FILE for AIX Java Agent
+      shell: |
+        export ENFORCE_USE_CUSTOM_CERTS=true
+        export AGENT_CERT_FILE={{ download_location }}/cohesity_ca_cert.proto
+      when: ansible_distribution == 'AIX'
+
+    - name: Set ENFORCE_USE_CUSTOM_CERTS and AGENT_CERT_FILE for HP-UX, Solaris Java Agent
+      shell: |
+        echo 'ENFORCE_USE_CUSTOM_CERTS=true' >> /usr/local/cohesity/set_env.sh
+        echo 'AGENT_CERT_FILE={{ download_location }}/cohesity_ca_cert.proto' >> /usr/local/cohesity/set_env.sh
+      when: ansible_distribution in ['Solaris','HP-UX']

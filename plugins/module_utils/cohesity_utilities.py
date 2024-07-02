@@ -22,13 +22,6 @@ for Cohesity Platforms.
 
 def cohesity_common_argument_spec():
     return dict(
-        cluster=dict(type="str", aliases=["cohesity_server"]),
-        username=dict(
-            type="str", aliases=["cohesity_user", "admin_name", "cohesity_admin"]
-        ),
-        password=dict(
-            type="str", aliases=["cohesity_password", "admin_pass"], no_log=True
-        ),
         validate_certs=dict(
             default=True, type="bool", aliases=["cohesity_validate_certs"]
         ),

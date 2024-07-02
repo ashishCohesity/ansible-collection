@@ -243,70 +243,7 @@ Function Invoke-AgentDownload {
 
 }
 
-Function Install-CohesityAgent {
-    param(
-        [parameter(valuefrompipeline = $true)]
-        $self
-    )
 
-    process {
-        $tmpdir = (Get-Item -LiteralPath $self.filename).DirectoryName
-
-        $arguments = "/verysilent /norestart /suppressmsgboxes /type=" + $self.args.install_type
-
-        if ( $self.args.service_user ) {
-            if ( !$self.args.service_password ) {
-                $results = @{
-                    changed = $False
-                    step = "Validating Agent Credentials"
-                }
-                Fail-Json $results "Error: Must provide a password when setting the Cohesity Agent username"
-            }
-            $arguments += " /username=" + $self.args.service_user + " /password=" + $self.args.service_password
-        }
-
-        try {
-            # => Attempt to Install the Cohesity Agent and Wait until completed.
-            Start-Process -FilePath $self.filename -ArgumentList $arguments -Wait
-        }
-        catch {
-            # => Generate a clean error handler and Fail the Ansible run.
-            $errors = @{
-                changed = $False
-                step = "Failed while trying to install Windows Agent"
-            }
-            Fail-Json $errors $_.Exception.Message
-
-        }
-
-        $agents = Get-CohesityAgent
-
-        if ($agents.Count -gt 0) {
-            # Check if the DisplayVersion property exists and is not null for the first agent
-            if ($agents.DisplayVersion -ne $null) {
-                $results = @{
-                    changed = $true
-                    version = $agents[0].DisplayVersion
-                    msg = "Successfully Installed Cohesity Agent on Host"
-                }
-            } else {
-                $results = @{
-                    changed = $false
-                    msg = "Cohesity Agent is installed, but DisplayVersion is not available"
-                }
-            }
-        } else {
-            $results = @{
-                changed = $false
-                msg = "Cohesity Agent is not installed"
-                agent= $agents
-            }
-        }
-
-
-        Exit-Json $results
-    }
-}
 
 Function Remove-CohesityAgent {
     param(
@@ -356,6 +293,72 @@ Function Remove-CohesityAgent {
     }
 }
 
+Function Install-CohesityAgent {
+    param(
+        [parameter(valuefrompipeline = $true)]
+        $self
+    )
+
+    process {
+        $tmpdir = (Get-Item -LiteralPath $self.filename).DirectoryName
+
+        $arguments = "/verysilent /norestart /suppressmsgboxes /type=" + $self.args.install_type
+
+        if ($self.args.service_user) {
+            if (!$self.args.service_password) {
+                $results = @{
+                    changed = $False
+                    step = "Validating Agent Credentials"
+                }
+                Fail-Json $results "Error: Must provide a password when setting the Cohesity Agent username"
+            }
+            $arguments += " /username=" + $self.args.service_user + " /password=" + $self.args.service_password
+        }
+
+        # Add custom certificate parameters
+        $arguments += " /enforceusecustomcert=yes /customcertstype=cohesitycustomcerts /cohesitycustomcertpath=" + $self.args.cohesity_custom_cert_path
+
+        try {
+            # => Attempt to Install the Cohesity Agent and Wait until completed.
+            Start-Process -FilePath $self.filename -ArgumentList $arguments -Wait
+        }
+        catch {
+            # => Generate a clean error handler and Fail the Ansible run.
+            $errors = @{
+                changed = $False
+                step = "Failed while trying to install Windows Agent"
+            }
+            Fail-Json $errors $_.Exception.Message
+        }
+
+        $agents = Get-CohesityAgent
+
+        if ($agents.Count -gt 0) {
+            # Check if the DisplayVersion property exists and is not null for the first agent
+            if ($agents.DisplayVersion -ne $null) {
+                $results = @{
+                    changed = $true
+                    version = $agents[0].DisplayVersion
+                    msg = "Successfully Installed Cohesity Agent on Host"
+                }
+            } else {
+                $results = @{
+                    changed = $false
+                    msg = "Cohesity Agent is installed, but DisplayVersion is not available"
+                }
+            }
+        } else {
+            $results = @{
+                changed = $false
+                msg = "Cohesity Agent is not installed"
+                agent= $agents
+            }
+        }
+
+        Exit-Json $results
+    }
+}
+
 $results = @{
     changed = $false
     msg = @() # More for debug purposes
@@ -380,11 +383,12 @@ $module.install_type = Get-AnsibleParam -obj $params -name "install_type" -type 
 $module.preservesettings = Get-AnsibleParam -obj $params -name "preservesettings" -type "bool" -default $False
 $module.state = Get-AnsibleParam -obj $params -name "state" -type "str" -default "present" -validateset "present", "absent"
 $module.installer_path = Get-AnsibleParam -obj $params -name "installer_path" -type "str" -failifempty $true
+$module.cohesity_custom_cert_path = Get-AnsibleParam -obj $params -name "cohesity_custom_cert_path" -type "str" -failifempty $true
 
 # => Check if the Agent is currently installed and handle State validation.
 # => If the State should be absent then return the uninstaller string.
 
-if ( $module.check_mode ) {
+if ($module.check_mode) {
     switch ($module.state) {
         "present" {
             if ($uninstaller) {
@@ -395,7 +399,7 @@ if ( $module.check_mode ) {
             }
         }
         "absent" {
-            if ( $module.check_mode ) {
+            if ($module.check_mode) {
                 if ($uninstaller) {
                     $results.msg = "Check Mode: Agent is currently installed.  This action would uninstall the Agent."
                 }
@@ -417,7 +421,6 @@ if ( $module.check_mode ) {
 }
 else {
     $uninstaller = Find-CohesityAgent -State $module.state
-
 }
 switch ($module.state) {
     "present" {
@@ -426,7 +429,7 @@ switch ($module.state) {
         Install-CohesityAgent -Self $results
     }
     "absent" {
-        if ( $module.preservesettings ) {
+        if ($module.preservesettings) {
             Remove-CohesityAgent -Uninstaller $uninstaller -PreserveSettings $True
         }
         else {

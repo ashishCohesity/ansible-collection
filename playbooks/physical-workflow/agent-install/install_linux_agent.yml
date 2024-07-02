@@ -2,118 +2,226 @@
 # =>
 # => Collection: cohesity.dataprotect
 # =>
-
-# => Install the Cohesity Agent on each Linux host
+# => Install or Remove the Cohesity Agent on each Linux host
 # => specified in the Ansible inventory
 # =>
 ---
 - hosts: linux
-  vars:
-    state: present
-
-    firewall_command: "--zone=public --permanent"
-
-
-  # => We need to gather facts to determine the OS type of
-  # => the machine
   gather_facts: true
   become: true
-  collections:
-    - cohesity.dataprotect
+
+  vars:
+    state: "present"
+    # state: "absent"
+    native_package: true
+    firewall_command: "--zone=public --permanent"
+    # dest_path: "/root/"
+    cert_download_location: "/home/cohesity/work"
+    json_file_name: "agent_installer_files.json"
+    json_file_path: "{{ cluster_path }}{{ json_file_name }}"
+    data: "{{ lookup('file', json_file_path) | from_json }}"
+    install_dependencies: true  # Set to true to install prerequisite packages
+    solaris_arch: "{{ 'x86' if 'X86' in ansible_distribution_release else 'Sparc' }}"
+
   tasks:
-    # Alert: Don't edit these tasks.
-    - name: Install Prerequisite Packages for CentOS or RedHat
-      action: >
-        {{ ansible_pkg_mgr }} name="wget,rsync,lsof,lvm2,nfs-utils" state=present
+
+    - debug:
+        msg: "{{ solaris_arch }} | {{ ansible_distribution_release }}"
+
+
+    - name: Install Prerequisite Packages
+      ansible.builtin.package:
+        name:
+          - wget
+          - rsync
+          - lsof
+          - lvm2
+          - nfs-utils
+        state: present
       when:
-        - ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
-        - state == "present"
-        - install_dependencies | default(false)
-      tags: always
+        - state == "present" and install_dependencies
+        - ansible_distribution in ["CentOS", "Rocky", "RedHat", "OracleLinux"]
+
 
     - name: Install Prerequisite Packages for Ubuntu
-      action: >
-        {{ ansible_pkg_mgr }} name="wget,rsync,lsof,lvm2,nfs-common" state=present
+      ansible.builtin.package:
+        name:
+          - wget
+          - rsync
+          - lsof
+          - lvm2
+          - nfs-common
+        state: present
       when:
+        - state == "present" and install_dependencies
         - ansible_distribution == "Ubuntu"
-        - state == "present"
-        - install_dependencies | default(false)
-      tags: always
-
-    - name: Install Prerequisite Packages for OracleLinux
-      action: >
-        {{ ansible_pkg_mgr }} name="wget,rsync,lsof,lvm2,nfs-utils" state=present
-      when:
-        - ansible_distribution == "OracleLinux"
-        - state == "present"
-        - install_dependencies | default(false)
-      tags: always
 
     - name: Install Prerequisite Packages for SLES
-      action: >
-        {{ ansible_pkg_mgr }} name="wget,rsync,lsof,lvm2,libcap-progs" state=present
+      ansible.builtin.package:
+        name:
+          - wget
+          - rsync
+          - lsof
+          - lvm2
+          - libcap-progs
+        state: present
       when:
+        - state == "present" and install_dependencies
         - ansible_distribution == "SLES"
-        - state == "present"
-        - install_dependencies | default(false)
-      tags: always
 
-    - name: Install Prerequisite Packages for AIX
-      action: >
-        {{ ansible_pkg_mgr }} name="wget,rsync" state=present
-      when:
-        - ansible_distribution == "AIX"
-        - state == "present"
-        - install_dependencies | default(false)
-      tags: always
+    # - name: Install Prerequisite Packages for AIX
+    #   ansible.builtin.package:
+    #     name:
+    #       - wget
+    #       - rsync
+    #     state: present
+    #   when:
+    #     - state == "present" and install_dependencies
+    #     - ansible_distribution == "AIX"
 
     - name: Check if firewall is enabled
-      command: "firewall-cmd --state"
+      ansible.builtin.command: "firewall-cmd --state"
       ignore_errors: true
       register: firewall_status
       when:
-        - (ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "SLES") and state == "present" and {{ check_firewall_rules | default(false) }}
-        - ansible_distribution == "Ubuntu" and state == "present" and {{ check_firewall_rules | default(false) }}
-      tags: always
+        - (ansible_distribution in ["CentOS", "OracleLinux", "Rocky", "SLES", "Ubuntu","RedHat"]) and state == "present" and check_firewall_rules | default(false)
 
     - name: Enable tcp {{ port | default(50051) }}
-      command: "firewall-cmd {{ firewall_command }} --add-{{ port | default(50051) }} {{ {{ port | default(50051) }} }}/tcp"
+      ansible.builtin.command: "firewall-cmd {{ firewall_command }} --add-{{ port | default(50051) }} {{ port | default(50051) }}/tcp"
       when:
-        - (ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "SLES") and state == "present" and {{ check_firewall_rules | default(false) }} and firewall_status.rc == 0
-        - ansible_distribution == "Ubuntu" and state == "present" and {{ check_firewall_rules | default(false) }} and firewall_status.rc == 0
-      tags: always
+        - state == "present"
+        - (ansible_distribution in ["CentOS", "OracleLinux", "Rocky", "SLES", "Ubuntu","RedHat"])
+        - firewall_status is defined
+        - firewall_status.rc == 0
+        - check_firewall_rules | default(false)
+
 
     - name: Find Linux agent installer path
       set_fact:
-        installer_src: "{{ server_path }}/{{ item.file.Filename }}"
+        installer_src: "{{ cluster_path }}{{ item.file.Filename }}"
         installer_dest: "{{ dest_path }}{{ item.file.Filename }}"
       loop: "{{ data }}"
       when:
         - item.file.Hostenv == "Linux"
+        - ansible_distribution in ["CentOS", "OracleLinux", "Rocky", "SLES", "Ubuntu","RedHat"]
         - >
           (
             (item.file.LinuxPkgType == "kScript" and item.file.AgentType == "" and native_package == false) or
-            (item.file.LinuxPkgType == "kRPM" and ansible_distribution in ['CentOS', 'OracleLinux', 'Rocky'] and native_package == true) or
+            (item.file.LinuxPkgType == "kRPM" and ansible_distribution in ["CentOS", "OracleLinux", "Rocky"] and native_package == true) or
             (item.file.LinuxPkgType == "kSuseRPM" and ansible_distribution == "SLES" and native_package == true) or
             (item.file.LinuxPkgType == "kDEB" and ansible_distribution == "Ubuntu" and native_package == true) or
             (item.file.LinuxPkgType == "kPowerPCRPM" and ansible_distribution == "RedHat" and native_package == true)
           )
+        - state == "present"
+
+    - name: Find AIX agent installer path
+      set_fact:
+        installer_src: "{{ cluster_path }}{{ item.file.Filename }}"
+        installer_dest: "{{ dest_path }}{{ item.file.Filename }}"
+      loop: "{{ data }}"
+      when:
+        - ansible_distribution == "AIX"
+        - item.file.AgentType == "kJava"
+        - item.file.Hostenv == "AIX"
+        - state == "present"
+
+    - name: Find HPUX agent installer path
+      set_fact:
+        installer_src: "{{ cluster_path }}{{ item.file.Filename }}"
+        installer_dest: "{{ dest_path }}{{ item.file.Filename }}"
+      loop: "{{ data }}"
+      when:
+        - item.file.Hostenv == "HPUX"
+        - state == "present"
+        - ansible_distribution == "HP-UX"
+
+    - name: Find Solaris agent installer path
+      set_fact:
+        installer_src: "{{ cluster_path }}{{ item.file.Filename }}"
+        installer_dest: "{{ dest_path }}{{ item.file.Filename }}"
+      loop: "{{ data }}"
+      when:
+        - item.file.Hostenv == "Solaris"
+        - ansible_distribution == "Solaris"
+        - state == "present"
+        - >
+          (
+            ("kSolaris" ~ ansible_distribution_major_version ~ solaris_arch) == item.file.SolarisPkgType
+          )
+
+
+    - name: Get CohesityCA Agent Certificates
+      cohesity_certificates:
+        cluster: "{{ cohesity_server }}"
+        username: "{{ cohesity_username }}"
+        password: "{{ cohesity_password }}"
+        get_agent_certificates: true
+        download_location: "{{ cert_download_location }}"
+      when:
+        - state == "present"  # Only perform the action when state is 'present'
+        - installer_src is defined  # Ensure installer_src is defined
+        - installer_dest is defined  # Ensure installer_dest is defined
+      register: cohesity_result
+      delegate_to: localhost
+
+
+    - name: Copy CohesityCA Agent Certificates to the host
+      ansible.builtin.copy:
+        src: "{{ cert_download_location }}/cohesityca_agent_cert.proto"
+        dest: "{{ dest_path }}cohesityca_agent_cert.proto"
+      when:
+        - cohesity_result is defined
+        - installer_dest is defined
+        - state == "present"
+        - (ansible_distribution != "Solaris" or ansible_distribution_major_version != "10")
+
+    - name: Perform the certificate scp operation using sshpass
+      ansible.builtin.shell: |
+        sshpass -p "{{ ansible_password }}" scp -oKexAlgorithms=+diffie-hellman-group1-sha1,diffie-hellman-group14-sha1 -oHostKeyAlgorithms=+ssh-rsa -o StrictHostKeyChecking=no {{ cert_download_location }}/cohesityca_agent_cert.proto {{ ansible_user }}@{{ ansible_host }}:{{ dest_path }}cohesityca_agent_cert.proto
+      environment:
+        ANSIBLE_HOST_KEY_CHECKING: "False"
+      delegate_to: localhost
+      when:
+        - cohesity_result is defined
+        - installer_dest is defined
+        - state == "present"
+        - ansible_distribution == "Solaris"
+        - ansible_distribution_major_version == "10"
+
+
+    - name: Perform the Linux agent installer scp operation using sshpass
+      ansible.builtin.shell: |
+        sshpass -p "{{ ansible_password }}" scp -oKexAlgorithms=+diffie-hellman-group1-sha1,diffie-hellman-group14-sha1 -oHostKeyAlgorithms=+ssh-rsa -o StrictHostKeyChecking=no {{ installer_src }} {{ ansible_user }}@{{ ansible_host }}:{{ installer_dest }}
+      environment:
+        ANSIBLE_HOST_KEY_CHECKING: "False"
+      delegate_to: localhost
+      when:
+        - cohesity_result is defined
+        - installer_dest is defined
+        - state == "present"
+        - ansible_distribution == "Solaris"
+        - ansible_distribution_major_version == "10"
 
     - name: Copy Linux agent installer
       ansible.builtin.copy:
         src: "{{ installer_src }}"
         dest: "{{ installer_dest }}"
-      when: installer_src is defined and installer_dest is defined
+      when: installer_src is defined and installer_dest is defined and state == "present" and (ansible_distribution != "Solaris" or ansible_distribution_major_version != "10")
 
-    - name: "Cohesity agent: Set Agent to state of present"
+
+    - debug:
+        msg: "State: {{ state }}, Cohesity Result: {{ cohesity_result }}"
+
+
+    - name: Set Cohesity Agent to state 'present' or 'absent'
       cohesity_agent:
-        cluster: "{{ cohesity_server }}"
-        username: "{{ cohesity_username }}"
-        password: "{{ cohesity_password }}"
         validate_certs: "{{ cohesity_validate_certs }}"
-        state: "{{ state | default('present') }}"
+        state: "{{ state }}"
         create_user: "{{ create_user | default(false) }}"
         native_package: "{{ native_package | default(false) }}"
         operating_system: "{{ ansible_distribution }}"
-        installer_path: "{{ installer_dest }}"
-      when: installer_src is defined and installer_dest is defined
+        installer_path: "{{ installer_dest | default('/')}}"
+        cert_file_path: "{{ dest_path | default('/') }}cohesityca_agent_cert.proto"
+      when:
+        - (state == "present" and installer_src is defined and installer_dest is defined) or
+          (state == "absent")
