@@ -1,6 +1,6 @@
 import os
 from ansible.module_utils.basic import AnsibleModule
-from magneto.agents.stub.my_greeting_module import generate_greeting
+from ansible_collections.cohesity.dataprotect.plugins.module_utils.my_greeting_module import generate_greeting
 
 def get_environment_variables():
     env_vars = []

@@ -16,7 +16,8 @@
     native_package: true
     firewall_command: "--zone=public --permanent"
     # dest_path: "/root/"
-    cert_download_location: "/home/cohesity/work"
+    cert_download_location: "/usr/share/ansible/collections/ansible_collections/cohesity/dataprotect/tmp/cohesityca_agent_cert.proto"
+    # cert_download_location: "/home/cohesity/work/cohesityca_agent_cert.proto"
     json_file_name: "agent_installer_files.json"
     json_file_path: "{{ cluster_path }}{{ json_file_name }}"
     data: "{{ lookup('file', json_file_path) | from_json }}"
@@ -151,7 +152,7 @@
 
 
     - name: Get CohesityCA Agent Certificates
-      cohesity_certificates:
+      cohesity.dataprotect.cohesity_certificates:
         cluster: "{{ cohesity_server }}"
         username: "{{ cohesity_username }}"
         password: "{{ cohesity_password }}"
@@ -163,11 +164,12 @@
         - installer_dest is defined  # Ensure installer_dest is defined
       register: cohesity_result
       delegate_to: localhost
+      run_once: true
 
 
     - name: Copy CohesityCA Agent Certificates to the host
       ansible.builtin.copy:
-        src: "{{ cert_download_location }}/cohesityca_agent_cert.proto"
+        src: "{{ cert_download_location }}"
         dest: "{{ dest_path }}cohesityca_agent_cert.proto"
       when:
         - cohesity_result is defined
@@ -177,7 +179,7 @@
 
     - name: Perform the certificate scp operation using sshpass
       ansible.builtin.shell: |
-        sshpass -p "{{ ansible_password }}" scp -oKexAlgorithms=+diffie-hellman-group1-sha1,diffie-hellman-group14-sha1 -oHostKeyAlgorithms=+ssh-rsa -o StrictHostKeyChecking=no {{ cert_download_location }}/cohesityca_agent_cert.proto {{ ansible_user }}@{{ ansible_host }}:{{ dest_path }}cohesityca_agent_cert.proto
+        sshpass -p "{{ ansible_password }}" scp -oKexAlgorithms=+diffie-hellman-group1-sha1,diffie-hellman-group14-sha1 -oHostKeyAlgorithms=+ssh-rsa -o StrictHostKeyChecking=no {{ cert_download_location }} {{ ansible_user }}@{{ ansible_host }}:{{ dest_path }}cohesityca_agent_cert.proto
       environment:
         ANSIBLE_HOST_KEY_CHECKING: "False"
       delegate_to: localhost
@@ -214,7 +216,7 @@
 
 
     - name: Set Cohesity Agent to state 'present' or 'absent'
-      cohesity_agent:
+      cohesity.dataprotect.cohesity_agent:
         validate_certs: "{{ cohesity_validate_certs }}"
         state: "{{ state }}"
         create_user: "{{ create_user | default(false) }}"
