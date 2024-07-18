@@ -6,3 +6,5 @@ installers/
 
 # Ignore the tmp folder
 tmp/
+galaxy_importer/
+my_vars.json

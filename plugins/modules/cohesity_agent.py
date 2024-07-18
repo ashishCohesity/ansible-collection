@@ -412,8 +412,8 @@ def install_agent(module, installer, native):
             ]
         elif os_type in ["CentOS", "OracleLinux", "Rocky"]:
             cmd_parts = [
-                "export ENFORCE_USE_CUSTOM_CERTS=true",
-                env_vars_linux,
+                "export ENFORCE_USE_CUSTOM_CERTS=true" + '&&' +
+                env_vars_linux + '&&' +
                 "COHESITYUSER={} rpm -i {}".format(user, installer)
             ]
         elif os_type == "AIX":

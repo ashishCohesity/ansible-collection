@@ -1,22 +1,21 @@
 [linux]
-rocky ansible_host=10.14.72.29 ansible_user=root ansible_password=fr8shst8rt ansible_sudo_pass=fr8shst8rt dest_path="/root/cohesity_agent_ansible/"
-; aix7_1 ansible_host=10.2.144.89 ansible_user=root ansible_password=fr8shst8rt ansible_sudo_pass=fr8shst8rt dest_path="/cohesity_agent_ansible/" ansible_python_interpreter=/usr/bin/python
+aix7_1 ansible_host=10.2.144.89 ansible_user=root ansible_password=fr8shst8rt ansible_sudo_pass=fr8shst8rt dest_path="/cohesity_agent_ansible/" ansible_python_interpreter=/usr/bin/python
+rocky ansible_host=10.14.74.25 ansible_user=root ansible_password=fr8shst8rt ansible_sudo_pass=fr8shst8rt dest_path="/root/cohesity_agent_ansible/"
+Power9 ansible_host=10.14.8.253 ansible_user=cohesity ansible_password=Fr8shst8rt!  ansible_sudo_pass=Fr8shst8rt!   dest_path="/home/cohesity/cohesity_agent_ansible/"
+solaris11Sparc ansible_host=10.2.193.52  ansible_user=root   ansible_password=ch4ng3m3! ansible_sudo_pass=ch4ng3m3! dest_path="/root/cohesity_agent_ansible/" ansible_python_interpreter=/opt/python3/bin/python3
+; solaris10Sparc ansible_host=10.2.193.58  ansible_user=root   ansible_password=ch4ng3m3! ansible_sudo_pass=ch4ng3m3! dest_path="/export/home/cohesity/cohesity_agent_ansible/" ansible_python_interpreter=/opt/python3/bin/python3 ansible_ssh_common_args='-o StrictHostKeyChecking=no -oKexAlgorithms=+diffie-hellman-group1-sha1 -c 3des-cbc -oHostKeyAlgorithms=+ssh-rsa,ssh-dss' ansible_become=true
 ; HPUX11 ansible_host=10.14.17.224 ansible_user=root ansible_password=pom7livo ansible_sudo_pass=pom7livo dest_path="/root/cohesity_agent_ansible/"
 ; ubuntu22_04 ansible_host=10.14.72.122 ansible_user=cohesity ansible_password=fr8shst8rt ansible_sudo_pass=fr8shst8rt dest_path="/home/cohesity/cohesity_agent_ansible/" ansible_become=true
-; Power9 ansible_host=10.14.8.253 ansible_user=cohesity ansible_password=Fr8shst8rt!  ansible_sudo_pass=Fr8shst8rt!   dest_path="/home/cohesity/cohesity_agent_ansible/"
 ; solaris11x86 ansible_host=10.14.14.159  ansible_user=cohesity   ansible_password=fr8shst8rt ansible_sudo_pass=fr8shst8rt dest_path="/export/home/cohesity/cohesity_agent_ansible/" ansible_python_interpreter=/opt/python3/bin/python3 ansible_ssh_common_args='-o StrictHostKeyChecking=no -oKexAlgorithms=+diffie-hellman-group1-sha1 -c 3des-cbc -oHostKeyAlgorithms=+ssh-rsa,ssh-dss' ansible_become=true
-; solaris11Sparc ansible_host=10.2.193.52  ansible_user=root   ansible_password=ch4ng3m3! ansible_sudo_pass=ch4ng3m3! dest_path="/root/cohesity_agent_ansible/" ansible_python_interpreter=/opt/python3/bin/python3
-; solaris10Sparc ansible_host=10.2.193.58  ansible_user=root   ansible_password=ch4ng3m3! ansible_sudo_pass=ch4ng3m3! dest_path="/export/home/cohesity/cohesity_agent_ansible/" ansible_python_interpreter=/opt/python3/bin/python3 ansible_ssh_common_args='-o StrictHostKeyChecking=no -oKexAlgorithms=+diffie-hellman-group1-sha1 -c 3des-cbc -oHostKeyAlgorithms=+ssh-rsa,ssh-dss' ansible_become=true
 ; solaris10x86 ansible_host=10.2.204.152 ansible_user=cohesity ansible_password=fr8shst8rt ansible_become_password=fr8shst8rt ansible_become=true ansible_become_method=su ansible_become_user=root ansible_python_interpreter=/opt/python3/bin/python3 dest_path="/export/home/cohesity/cohesity_agent_ansible/" ansible_ssh_common_args='-o StrictHostKeyChecking=no -oKexAlgorithms=+diffie-hellman-group1-sha1,diffie-hellman-group14-sha1 -oHostKeyAlgorithms=+ssh-rsa'
 
-
 [linux:vars]
-cohesity_server=10.14.58.57
+cohesity_server=10.14.55.222
 cohesity_username=admin
 cohesity_password=admin
 cohesity_validate_certs=false
-cluster_path=/usr/share/ansible/collections/ansible_collections/cohesity/dataprotect/installers/
-; cluster_path=/home/cohesity/.ansible/collections/ansible_collections/cohesity/dataprotect/installers/
+; cluster_path=/usr/share/ansible/collections/ansible_collections/cohesity/dataprotect/installers/
+cluster_path=/home/cohesity/.ansible/collections/ansible_collections/cohesity/dataprotect/installers/
 native_package=true
 check_firewall_rules=true
 ansible_ssh_common_args='-o StrictHostKeyChecking=no'

@@ -6,7 +6,8 @@
 # => specified in the Ansible inventory
 # =>
 ---
-- hosts: linux
+- hosts: all
+  # gather_facts: false
   gather_facts: true
   become: true
 
@@ -16,7 +17,8 @@
     native_package: true
     firewall_command: "--zone=public --permanent"
     # dest_path: "/root/"
-    cert_download_location: "/usr/share/ansible/collections/ansible_collections/cohesity/dataprotect/tmp/cohesityca_agent_cert.proto"
+    cert_file_name: "{{ ansible_host }}_cohesityca_agent_cert.proto" # it should be unique for all the files, as when we locally download, it may overwrite others
+    cert_download_location: "/tmp/{{ cert_file_name }}"
     # cert_download_location: "/home/cohesity/work/cohesityca_agent_cert.proto"
     json_file_name: "agent_installer_files.json"
     json_file_path: "{{ cluster_path }}{{ json_file_name }}"
@@ -25,10 +27,6 @@
     solaris_arch: "{{ 'x86' if 'X86' in ansible_distribution_release else 'Sparc' }}"
 
   tasks:
-
-    - debug:
-        msg: "{{ solaris_arch }} | {{ ansible_distribution_release }}"
-
 
     - name: Install Prerequisite Packages
       ansible.builtin.package:
@@ -85,16 +83,40 @@
       ignore_errors: true
       register: firewall_status
       when:
-        - (ansible_distribution in ["CentOS", "OracleLinux", "Rocky", "SLES", "Ubuntu","RedHat"]) and state == "present" and check_firewall_rules | default(false)
+        - ansible_distribution in ["CentOS", "OracleLinux", "Rocky", "SLES", "Ubuntu", "RedHat"]
+        - state == "present"
+        - check_firewall_rules | default(false)
 
     - name: Enable tcp {{ port | default(50051) }}
-      ansible.builtin.command: "firewall-cmd {{ firewall_command }} --add-{{ port | default(50051) }} {{ port | default(50051) }}/tcp"
+      ansible.builtin.command: "firewall-cmd {{ firewall_command }} --add-port={{ port | default(50051) }}/tcp"
       when:
         - state == "present"
-        - (ansible_distribution in ["CentOS", "OracleLinux", "Rocky", "SLES", "Ubuntu","RedHat"])
+        - ansible_distribution in ["CentOS", "OracleLinux", "Rocky", "SLES", "Ubuntu", "RedHat"]
         - firewall_status is defined
         - firewall_status.rc == 0
         - check_firewall_rules | default(false)
+
+    # - name: Start and enable firewall if not running
+    #   ansible.builtin.systemd:
+    #     name: firewalld
+    #     state: started
+    #     enabled: true
+    #   when:
+    #     - state == "present"
+    #     - ansible_distribution in ["CentOS", "OracleLinux", "Rocky", "SLES", "Ubuntu", "RedHat"]
+    #     - firewall_status is defined
+    #     - firewall_status.rc != 0
+    #     - check_firewall_rules | default(false)
+
+    # - name: Enable tcp {{ port | default(50051) }} after starting firewall
+    #   ansible.builtin.command: "firewall-cmd {{ firewall_command }} --add-port={{ port | default(50051) }}/tcp"
+    #   when:
+    #     - state == "present"
+    #     - ansible_distribution in ["CentOS", "OracleLinux", "Rocky", "SLES", "Ubuntu", "RedHat"]
+    #     - firewall_status is defined
+    #     - firewall_status.rc != 0
+    #     - check_firewall_rules | default(false)
+    #     - firewall_status.rc == 0
 
 
     - name: Find Linux agent installer path
@@ -158,13 +180,15 @@
         password: "{{ cohesity_password }}"
         get_agent_certificates: true
         download_location: "{{ cert_download_location }}"
+        host_ip: "{{ ansible_host }}"
       when:
         - state == "present"  # Only perform the action when state is 'present'
-        - installer_src is defined  # Ensure installer_src is defined
-        - installer_dest is defined  # Ensure installer_dest is defined
+        # - installer_src is defined  # Ensure installer_src is defined
+        # - installer_dest is defined  # Ensure installer_dest is defined
       register: cohesity_result
+      become: false
       delegate_to: localhost
-      run_once: true
+
 
 
     - name: Copy CohesityCA Agent Certificates to the host
@@ -182,6 +206,7 @@
         sshpass -p "{{ ansible_password }}" scp -oKexAlgorithms=+diffie-hellman-group1-sha1,diffie-hellman-group14-sha1 -oHostKeyAlgorithms=+ssh-rsa -o StrictHostKeyChecking=no {{ cert_download_location }} {{ ansible_user }}@{{ ansible_host }}:{{ dest_path }}cohesityca_agent_cert.proto
       environment:
         ANSIBLE_HOST_KEY_CHECKING: "False"
+      become: false
       delegate_to: localhost
       when:
         - cohesity_result is defined
@@ -196,6 +221,7 @@
         sshpass -p "{{ ansible_password }}" scp -oKexAlgorithms=+diffie-hellman-group1-sha1,diffie-hellman-group14-sha1 -oHostKeyAlgorithms=+ssh-rsa -o StrictHostKeyChecking=no {{ installer_src }} {{ ansible_user }}@{{ ansible_host }}:{{ installer_dest }}
       environment:
         ANSIBLE_HOST_KEY_CHECKING: "False"
+      become: false
       delegate_to: localhost
       when:
         - cohesity_result is defined

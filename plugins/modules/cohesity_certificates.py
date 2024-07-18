@@ -13,9 +13,8 @@ class CohesityCertificates:
         self.username = params.get("username")
         self.password = params.get("password")
         self.base_url = f"https://{self.cluster}"
-        self.download_location = params.get(
-            "download_location", "/home/cohesity/work"
-        )  # Default download location
+        self.download_location = params.get("download_location")  # Default download location
+        self.host_ip = params.get("host_ip")
 
     def get_authentication_token(self):
         uri = f"{self.base_url}/irisservices/api/v1/public/accessTokens"
@@ -66,16 +65,17 @@ class CohesityCertificates:
         }
 
         payload = {
-            "organization": "organization",
+             "organization": "organization",
             "organizationUnit": "organizationUnit",
             "countryCode": "countryCode",
             "state": "state",
             "city": "city",
             "commonName": "Agent (gRPC server)",
-            "sanList": ["Agent (gRPC server)", "IP"],
+            "sanList": ["Agent (gRPC server)", self.host_ip]
         }
 
         data = json.dumps(payload).encode("utf-8")
+        response = None
 
         try:
             response = self._send_request(uri, data, headers, method="POST")
@@ -89,7 +89,6 @@ class CohesityCertificates:
                 error_message += f" (Reason: {error.reason})"
             if response is not None:
                 error_message += f" (Response: {response.status}, {response.reason})"
-                # Optionally, read the response content if it's not too large
                 try:
                     response_content = response.read().decode()
                     error_message += f" (Response Content: {response_content})"
@@ -129,8 +128,9 @@ def main():
         password=dict(type="str", required=True, no_log=True),
         get_agent_certificates=dict(type="bool", required=False, default=False),
         download_location=dict(
-            type="str", required=False, default="/home/cohesity/work"
+            type="str", required=False, default="/tmp/"
         ),
+        host_ip=dict(type="str", required=True),
     )
 
     result = dict(

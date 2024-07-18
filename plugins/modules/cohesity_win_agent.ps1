@@ -302,7 +302,7 @@ Function Install-CohesityAgent {
     process {
         $tmpdir = (Get-Item -LiteralPath $self.filename).DirectoryName
 
-        $arguments = "/verysilent /norestart /suppressmsgboxes /type=" + $self.args.install_type
+        $arguments = "/type=onlyagent /verysilent /norestart /suppressmsgboxes /enforceusecustomcert=yes /customcertstype=cohesitycustomcerts /cohesitycustomcertpath=" + $self.args.cohesity_custom_cert_path
 
         if ($self.args.service_user) {
             if (!$self.args.service_password) {
@@ -315,8 +315,6 @@ Function Install-CohesityAgent {
             $arguments += " /username=" + $self.args.service_user + " /password=" + $self.args.service_password
         }
 
-        # Add custom certificate parameters
-        $arguments += " /enforceusecustomcert=yes /customcertstype=cohesitycustomcerts /cohesitycustomcertpath=" + $self.args.cohesity_custom_cert_path
 
         try {
             # => Attempt to Install the Cohesity Agent and Wait until completed.

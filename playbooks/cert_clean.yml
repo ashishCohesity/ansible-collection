@@ -17,13 +17,13 @@
     - name: Determine OS family
       set_fact:
         os_family: "{{ ansible_distribution }}"
-    - name: Stop Cohesity agent service
-      ansible.builtin.shell:
-        cmd: "{{ agent_paths[os_family] }} stop"
-      when: os_family in agent_paths.keys()
-      ignore_errors: true
-      tags:
-        - agent_cleanup
+    # - name: Stop Cohesity agent service
+    #   ansible.builtin.shell:
+    #     cmd: "{{ agent_paths[os_family] }} stop"
+    #   when: os_family in agent_paths.keys()
+    #   ignore_errors: true
+    #   tags:
+    #     - agent_cleanup
 
 
     - name: Delete server_cert file
@@ -34,16 +34,16 @@
       tags:
         - agent_cleanup
 
-    - name: Start Cohesity agent service
-      ansible.builtin.shell:
-        cmd: "{{ agent_paths[os_family] }} start"
-      when: os_family in agent_paths.keys()
-      ignore_errors: true
-      tags:
-        - agent_cleanup
+    # - name: Start Cohesity agent service
+    #   ansible.builtin.shell:
+    #     cmd: "{{ agent_paths[os_family] }} start"
+    #   when: os_family in agent_paths.keys()
+    #   ignore_errors: true
+    #   tags:
+    #     - agent_cleanup
 
     - name: Verify cleanup results locally
-      ansible.builtin.command: "openssl s_client -connect 10.14.72.29:50051"
+      ansible.builtin.command: "openssl s_client -connect {{ansible_host}}:50051"
       delegate_to: localhost
       ignore_errors: true
       register: cert_check
@@ -55,6 +55,6 @@
 
 
 
-    - name: Restart Cohesity agent service
-      ansible.builtin.shell: "{{ agent_paths[os_family] }} start"
-      when: os_family in agent_paths.keys()
+    # - name: Restart Cohesity agent service
+    #   ansible.builtin.shell: "{{ agent_paths[os_family] }} start"
+    #   when: os_family in agent_paths.keys()

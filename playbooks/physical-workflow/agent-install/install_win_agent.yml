@@ -9,30 +9,34 @@
 ---
 - hosts: windows
   vars:
-    dest_path: C:\Users\Administrator\Downloads\Cohesity_Agent_Ansible
-    cert_download_location: "/home/cohesity/work/win_cert.proto"
+    dest_path: C:\Users\Administrator\Downloads\Cohesity_Agent_Ansible\
+    cert_file_name: "{{ ansible_host }}_cohesityca_agent_cert.proto" # it should be unique for all the files, as when we locally download, it may overwrite others
+    cert_download_location: "/tmp/{{ cert_file_name }}"
     json_file_name: "agent_installer_files.json"
     json_file_path: "{{ cluster_path }}{{ json_file_name }}"
     data: "{{ lookup('file', json_file_path) | from_json }}"
     install_dependencies: true  # Set to true to install prerequisite packages
+    # state: absent
     state: present
     reboot: false
 
-  # gather_facts: true
-  gather_facts: false
+  gather_facts: true
   become: false
 
   collections:
     - cohesity.dataprotect
 
   tasks:
+
     - name: Get CohesityCA Agent Certificates
-      cohesity_certificates:
+      cohesity.dataprotect.cohesity_certificates:
         cluster: "{{ cohesity_server }}"
         username: "{{ cohesity_username }}"
         password: "{{ cohesity_password }}"
         get_agent_certificates: true
         download_location: "{{ cert_download_location }}"
+        host_ip: "{{ ansible_host }}"
+
       when:
         - state == "present"  # Only perform the action when state is 'present'
       register: cohesity_result
@@ -45,6 +49,8 @@
       loop: "{{ data }}"
       when:
         - item.file.Hostenv == "Windows"
+        - state == "present"
+
 
     - name: Copy Windows agent installer
       ansible.builtin.win_copy:
@@ -67,18 +73,18 @@
 
 
     - name: "Cohesity agent: Set Agent to state of present"
-      cohesity_win_agent:
+      cohesity.dataprotect.cohesity_win_agent:
         cluster: "{{ cohesity_server }}"
         username: "{{ cohesity_username }}"
         password: "{{ cohesity_password }}"
         validate_certs: "{{ cohesity_validate_certs }}"
         state: "{{ state }}"
-        check_mode: True
+        check_mode: false
         service_user: "{{ service_user | default('') }}"
         service_password: "{{ service_password | default('') }}"
         preserve_settings: "{{ preserve_settings | default(False) }}"
         install_type: "{{ install_type | default('volcbt') }}"
-        installer_path: "{{ installer_dest }}"
+        installer_path: "{{ installer_dest | default('') }}"
         cohesity_custom_cert_path: "{{ dest_path | default('/') }}cohesityca_agent_cert.proto"
 
       when:
@@ -100,12 +106,12 @@
         enabled: true
       tags: always
 
-    - name: Reboot the Hosts after agent modification
-      win_reboot:
-        reboot_timeout: 180
-      when:
-        - installed.changed
-        - (state == "present" and installer_src is defined and installer_dest is defined) or
-          (state == "absent")
-        - "{{ reboot }}"
-      tags: always
+    # - name: Reboot the Hosts after agent modification
+    #   win_reboot:
+    #     reboot_timeout: 180
+    #   when:
+    #     - installed.changed
+    #     - (state == "present" and installer_src is defined and installer_dest is defined) or
+    #       (state == "absent")
+    #     - "{{ reboot }}"
+    #   tags: always
